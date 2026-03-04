@@ -88,3 +88,20 @@ test("filterValidReimbursements keeps only approved and valid rows", () => {
     [1]
   );
 });
+
+test("computeSummary clamps prorationRate at zero when available budget is negative", () => {
+  const data = {
+    meta: {
+      collectionAmountPerMember: 4000
+    },
+    collection: [{ paymentStatus: "済" }],
+    expenses: [{ amount: 6000 }],
+    reimbursements: [{ reimbursementAmount: 1000, approvalStatus: "承認済", invalidFlag: "有効" }]
+  };
+
+  const summary = computeSummary(data);
+
+  assert.equal(summary.availableAfterExpenses, -2000);
+  assert.equal(summary.currentBalance, -3000);
+  assert.equal(summary.prorationRate, 0);
+});

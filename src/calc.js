@@ -132,7 +132,7 @@
 
     var prorationRate = null;
     if (currentBalance < 0 && plannedReimbursementsTotal > 0) {
-      prorationRate = availableAfterExpenses / plannedReimbursementsTotal;
+      prorationRate = Math.max(0, availableAfterExpenses) / plannedReimbursementsTotal;
     }
 
     return {

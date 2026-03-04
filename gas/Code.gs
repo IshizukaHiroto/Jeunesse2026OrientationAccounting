@@ -94,10 +94,11 @@ function readReimbursements_(sheet, refundCapPerFreshman) {
   var rows = toRows_(sheet);
   return rows
     .map(function (row, index) {
-      var paymentAmount = toYen_(row["支払い金額"]);
-      var freshmanCount = toYen_(row["新入生の人数"]);
-      var computedCapAmount = Math.min(paymentAmount, freshmanCount * refundCapPerFreshman);
-      var reimbursementAmount = toYen_(row["返金額"]);
+      var paymentAmount = Math.max(0, toYen_(row["支払い金額"]));
+      var freshmanCount = Math.max(0, toYen_(row["新入生の人数"]));
+      var computedCapAmount = Math.max(0, Math.min(paymentAmount, freshmanCount * refundCapPerFreshman));
+      var reimbursementAmount = Math.max(0, toYen_(row["返金額"]));
+      var normalizedReimbursementAmount = reimbursementAmount > 0 ? reimbursementAmount : computedCapAmount;
 
       return {
         id: index + 2,
@@ -106,7 +107,7 @@ function readReimbursements_(sheet, refundCapPerFreshman) {
         description: text_(row["内容"]),
         paymentAmount: paymentAmount,
         freshmanCount: freshmanCount,
-        reimbursementAmount: reimbursementAmount > 0 ? reimbursementAmount : computedCapAmount,
+        reimbursementAmount: Math.min(normalizedReimbursementAmount, computedCapAmount),
         approvalStatus: text_(row["承認状況"]) || "未承認",
         refundStatus: text_(row["返金状況"]) || "未返金",
         invalidFlag: text_(row["無効フラグ"]) || "有効",
@@ -164,7 +165,7 @@ function computeSummary_(collection, expenses, reimbursements, collectionAmountP
 
   var prorationRate = null;
   if (currentBalance < 0 && plannedReimbursementsTotal > 0) {
-    prorationRate = availableAfterExpenses / plannedReimbursementsTotal;
+    prorationRate = Math.max(0, availableAfterExpenses) / plannedReimbursementsTotal;
   }
 
   return {
