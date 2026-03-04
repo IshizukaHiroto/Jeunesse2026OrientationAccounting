@@ -1,0 +1,2 @@
+# Jeunesse2026OrientationAccounting
+ジュネスの2026年新歓における会計記録を公開するためのものです。
