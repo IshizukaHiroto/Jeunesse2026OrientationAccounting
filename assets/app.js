@@ -187,6 +187,12 @@
       button: dom.expensesMoreButton,
       emptyMessage: "経費データはまだありません。",
       renderRow: function (row) {
+        var detailParts = [];
+        detailParts.push(row.date || "日付未入力");
+        if (row.category) {
+          detailParts.push(row.category);
+        }
+
         return (
           '<article class="line-item">' +
           '<div class="flex items-start justify-between gap-3">' +
@@ -194,9 +200,7 @@
           escapeHtml(row.description || "内容未入力") +
           "</p>" +
           '<p class="line-sub">' +
-          escapeHtml(row.date || "日付未入力") +
-          " / " +
-          escapeHtml(row.category || "カテゴリ未設定") +
+          escapeHtml(detailParts.join(" / ")) +
           "</p></div>" +
           '<p class="text-sm font-bold text-court-900">' +
           formatYen(row.amount) +
