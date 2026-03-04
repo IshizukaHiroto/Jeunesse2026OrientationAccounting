@@ -4,6 +4,7 @@ const {
   computeSummary,
   computeEqualRefundPlan,
   computeProrationPlan,
+  computeBalanceComposition,
   filterValidReimbursements
 } = require("../src/calc");
 
@@ -129,4 +130,52 @@ test("computeSummary clamps prorationRate at zero when available budget is negat
   assert.equal(summary.availableAfterExpenses, -2000);
   assert.equal(summary.currentBalance, -3000);
   assert.equal(summary.prorationRate, 0);
+});
+
+test("computeBalanceComposition returns expected percentages in normal case", () => {
+  const composition = computeBalanceComposition({
+    collectionTotal: 100000,
+    expensesTotal: 30000,
+    plannedReimbursementsTotal: 40000
+  });
+
+  assert.equal(composition.baseAmount, 100000);
+  assert.equal(composition.expensesInBase, 30000);
+  assert.equal(composition.reimburseInBase, 40000);
+  assert.equal(composition.balanceInBase, 30000);
+  assert.equal(composition.shortageAmount, 0);
+  assert.equal(composition.percentages.expenses, 30);
+  assert.equal(composition.percentages.reimbursements, 40);
+  assert.equal(composition.percentages.balance, 30);
+});
+
+test("computeBalanceComposition returns shortage in deficit case", () => {
+  const composition = computeBalanceComposition({
+    collectionTotal: 100000,
+    expensesTotal: 60000,
+    plannedReimbursementsTotal: 50000
+  });
+
+  assert.equal(composition.expensesInBase, 60000);
+  assert.equal(composition.reimburseInBase, 40000);
+  assert.equal(composition.balanceInBase, 0);
+  assert.equal(composition.shortageAmount, 10000);
+  assert.equal(composition.percentages.expenses, 60);
+  assert.equal(composition.percentages.reimbursements, 40);
+  assert.equal(composition.percentages.shortage, 10);
+});
+
+test("computeBalanceComposition handles zero base amount", () => {
+  const composition = computeBalanceComposition({
+    collectionTotal: 0,
+    expensesTotal: 0,
+    plannedReimbursementsTotal: 1400
+  });
+
+  assert.equal(composition.baseAmount, 0);
+  assert.equal(composition.expensesInBase, 0);
+  assert.equal(composition.reimburseInBase, 0);
+  assert.equal(composition.balanceInBase, 0);
+  assert.equal(composition.shortageAmount, 1400);
+  assert.equal(composition.percentages.shortage, 100);
 });

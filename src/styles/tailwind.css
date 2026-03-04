@@ -34,7 +34,27 @@
   }
 
   .section-summary {
-    @apply cursor-pointer list-none px-4 py-3 font-display text-base font-semibold text-court-900;
+    @apply flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 font-display text-base font-semibold text-court-900;
+  }
+
+  .section-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .section-toggle {
+    @apply inline-flex items-center rounded-full bg-court-100 px-3 py-1 text-xs font-bold tracking-wide text-court-900;
+  }
+
+  .toggle-close {
+    display: none;
+  }
+
+  details[open] > .section-summary .toggle-open {
+    display: none;
+  }
+
+  details[open] > .section-summary .toggle-close {
+    display: inline;
   }
 
   .status-chip {
@@ -67,5 +87,44 @@
 
   .ghost-btn {
     @apply inline-flex items-center rounded-lg border border-court-300 px-3 py-2 text-sm font-semibold text-court-900 transition hover:bg-court-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-court-300;
+  }
+
+  .refresh-btn {
+    @apply min-h-10 min-w-[108px] justify-center whitespace-nowrap px-3;
+  }
+
+  .refresh-btn .loading-dots {
+    display: none;
+  }
+
+  .refresh-btn[data-loading="true"] .loading-dots {
+    @apply inline-flex items-center gap-1;
+  }
+
+  .loading-dot {
+    @apply h-1.5 w-1.5 rounded-full bg-current;
+    animation: loading-dot-blink 1.2s infinite ease-in-out;
+  }
+
+  .loading-dot:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .loading-dot:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+}
+
+@keyframes loading-dot-blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.85);
+  }
+
+  40% {
+    opacity: 1;
+    transform: scale(1);
   }
 }

@@ -306,6 +306,45 @@
     return plan;
   }
 
+  function computeBalanceComposition(summary) {
+    var source = summary && typeof summary === "object" ? summary : {};
+
+    var baseAmount = Math.max(0, toNumber(source.collectionTotal));
+    var expensesTotal = Math.max(0, toNumber(source.expensesTotal));
+    var plannedReimbursementsTotal = Math.max(0, toNumber(source.plannedReimbursementsTotal));
+
+    var expensesInBase = Math.min(expensesTotal, baseAmount);
+    var refundBudget = Math.max(baseAmount - expensesInBase, 0);
+    var reimburseInBase = Math.min(plannedReimbursementsTotal, refundBudget);
+    var balanceInBase = Math.max(refundBudget - reimburseInBase, 0);
+    var shortageAmount = Math.max(plannedReimbursementsTotal - refundBudget, 0);
+
+    var percentages = {
+      expenses: 0,
+      reimbursements: 0,
+      balance: 0,
+      shortage: 0
+    };
+
+    if (baseAmount > 0) {
+      percentages.expenses = (expensesInBase / baseAmount) * 100;
+      percentages.reimbursements = (reimburseInBase / baseAmount) * 100;
+      percentages.balance = (balanceInBase / baseAmount) * 100;
+      percentages.shortage = (shortageAmount / baseAmount) * 100;
+    } else if (shortageAmount > 0) {
+      percentages.shortage = 100;
+    }
+
+    return {
+      baseAmount: baseAmount,
+      expensesInBase: expensesInBase,
+      reimburseInBase: reimburseInBase,
+      balanceInBase: balanceInBase,
+      shortageAmount: shortageAmount,
+      percentages: percentages
+    };
+  }
+
   function validatePayloadShape(payload) {
     var errors = [];
 
@@ -358,6 +397,7 @@
     computeSummary: computeSummary,
     computeEqualRefundPlan: computeEqualRefundPlan,
     computeProrationPlan: computeProrationPlan,
+    computeBalanceComposition: computeBalanceComposition,
     validatePayloadShape: validatePayloadShape
   };
 });

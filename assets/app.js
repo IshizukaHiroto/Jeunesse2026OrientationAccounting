@@ -12,7 +12,10 @@
   var state = {
     latestPayload: null,
     isRefreshing: false,
-    chart: null,
+    charts: {
+      collection: null,
+      balance: null
+    },
     limits: {
       collection: LIST_STEP,
       expenses: LIST_STEP,
@@ -22,6 +25,7 @@
 
   var dom = {
     refreshButton: document.getElementById("manual-refresh-btn"),
+    refreshLabel: document.getElementById("refresh-label"),
     syncChip: document.getElementById("sync-chip"),
     updatedAt: document.getElementById("updated-at"),
     syncBanner: document.getElementById("sync-banner"),
@@ -40,7 +44,9 @@
     collectionMoreButton: document.getElementById("collection-more-btn"),
     expensesMoreButton: document.getElementById("expenses-more-btn"),
     reimbursementsMoreButton: document.getElementById("reimbursements-more-btn"),
-    collectionChart: document.getElementById("collection-chart")
+    collectionChart: document.getElementById("collection-chart"),
+    balanceChart: document.getElementById("balance-chart"),
+    balanceBreakdown: document.getElementById("balance-breakdown")
   };
 
   attachEvents();
@@ -116,6 +122,10 @@
 
   function render(payload) {
     var summary = payload.summary || calc.computeSummary(payload);
+    var balanceComposition = calc.computeBalanceComposition
+      ? calc.computeBalanceComposition(summary)
+      : createFallbackBalanceComposition(summary);
+
     var collection = Array.isArray(payload.collection) ? payload.collection : [];
     var expenses = Array.isArray(payload.expenses) ? payload.expenses : [];
     var reimbursements = Array.isArray(payload.reimbursements) ? payload.reimbursements : [];
@@ -134,6 +144,8 @@
     renderExpensesList(expenses);
     renderReimbursementsList(reimbursements);
     renderCollectionChart(summary.paidMembers, summary.unpaidMembers);
+    renderBalanceChart(balanceComposition);
+    renderBalanceBreakdown(balanceComposition);
   }
 
   function renderEmpty() {
@@ -148,6 +160,12 @@
     dom.expensesList.innerHTML = '<p class="line-sub">表示データがありません。</p>';
     dom.reimbursementsList.innerHTML = '<p class="line-sub">表示データがありません。</p>';
     renderCollectionChart(0, 0);
+    renderBalanceChart(createFallbackBalanceComposition({
+      collectionTotal: 0,
+      expensesTotal: 0,
+      plannedReimbursementsTotal: 0
+    }));
+    renderBalanceBreakdown(null);
   }
 
   function renderCollectionList(rows) {
@@ -318,11 +336,11 @@
       return;
     }
 
-    if (state.chart) {
-      state.chart.destroy();
+    if (state.charts.collection) {
+      state.charts.collection.destroy();
     }
 
-    state.chart = new Chart(dom.collectionChart, {
+    state.charts.collection = new Chart(dom.collectionChart, {
       type: "doughnut",
       data: {
         labels: ["支払い済", "未払い"],
@@ -353,24 +371,224 @@
     });
   }
 
+  function renderBalanceChart(composition) {
+    if (typeof Chart === "undefined") {
+      return;
+    }
+
+    if (state.charts.balance) {
+      state.charts.balance.destroy();
+    }
+
+    var hasInnerData =
+      composition.baseAmount > 0 &&
+      composition.expensesInBase + composition.reimburseInBase + composition.balanceInBase > 0;
+
+    var innerData = hasInnerData
+      ? [composition.expensesInBase, composition.reimburseInBase, composition.balanceInBase]
+      : [1];
+
+    var innerMeta = [
+      {
+        label: "経費",
+        amount: composition.expensesInBase,
+        percent: composition.percentages.expenses
+      },
+      {
+        label: "返金予定（予算内）",
+        amount: composition.reimburseInBase,
+        percent: composition.percentages.reimbursements
+      },
+      {
+        label: "残高",
+        amount: composition.balanceInBase,
+        percent: composition.percentages.balance
+      }
+    ];
+
+    var innerColors = hasInnerData ? ["#4f8a4a", "#c86134", "#78b86f"] : ["#dce6dd"];
+
+    var outerBase = composition.baseAmount > 0 ? composition.baseAmount : composition.shortageAmount > 0 ? composition.shortageAmount : 1;
+    var outerShortageVisual = composition.shortageAmount > 0 ? Math.min(composition.shortageAmount, outerBase) : 0;
+    var outerNeutral = Math.max(outerBase - outerShortageVisual, 0);
+
+    state.charts.balance = new Chart(dom.balanceChart, {
+      type: "doughnut",
+      data: {
+        labels: ["不足分", "外側余白"],
+        datasets: [
+          {
+            label: "内訳",
+            data: innerData,
+            backgroundColor: innerColors,
+            borderColor: "#ffffff",
+            borderWidth: 2,
+            weight: 1
+          },
+          {
+            label: "不足",
+            data: [outerShortageVisual, outerNeutral],
+            backgroundColor: ["#d2372c", "rgba(0,0,0,0)"],
+            borderColor: ["#ffffff", "rgba(0,0,0,0)"],
+            borderWidth: [outerShortageVisual > 0 ? 2 : 0, 0],
+            weight: 0.55
+          }
+        ]
+      },
+      options: {
+        maintainAspectRatio: false,
+        cutout: "48%",
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                if (context.datasetIndex === 0) {
+                  var meta = innerMeta[context.dataIndex];
+                  if (!meta || meta.amount <= 0) {
+                    return "";
+                  }
+                  return meta.label + ": " + formatYen(meta.amount) + " (" + formatPercent(meta.percent) + ")";
+                }
+
+                if (context.datasetIndex === 1 && context.dataIndex === 0 && composition.shortageAmount > 0) {
+                  return "不足分: " + formatYen(composition.shortageAmount) + " (" + formatPercent(composition.percentages.shortage) + ")";
+                }
+
+                return "";
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function renderBalanceBreakdown(composition) {
+    if (!dom.balanceBreakdown) {
+      return;
+    }
+
+    if (!composition) {
+      dom.balanceBreakdown.innerHTML = '<li class="line-sub">データ待機中です。</li>';
+      return;
+    }
+
+    var items = [
+      {
+        label: "経費",
+        color: "#4f8a4a",
+        amount: composition.expensesInBase,
+        percent: composition.percentages.expenses
+      },
+      {
+        label: "返金予定（予算内）",
+        color: "#c86134",
+        amount: composition.reimburseInBase,
+        percent: composition.percentages.reimbursements
+      },
+      {
+        label: "残高",
+        color: "#78b86f",
+        amount: composition.balanceInBase,
+        percent: composition.percentages.balance
+      }
+    ];
+
+    if (composition.shortageAmount > 0) {
+      items.push({
+        label: "不足分（外側リング）",
+        color: "#d2372c",
+        amount: composition.shortageAmount,
+        percent: composition.percentages.shortage
+      });
+    }
+
+    dom.balanceBreakdown.innerHTML = items
+      .map(function (item) {
+        return (
+          '<li class="flex items-center justify-between gap-2">' +
+          '<span class="inline-flex min-w-0 items-center gap-2">' +
+          '<span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background-color:' +
+          item.color +
+          '"></span>' +
+          '<span class="truncate">' +
+          escapeHtml(item.label) +
+          "</span>" +
+          "</span>" +
+          '<span class="shrink-0 font-semibold">' +
+          formatYen(item.amount) +
+          " / " +
+          formatPercent(item.percent) +
+          "</span></li>"
+        );
+      })
+      .join("");
+
+    if (items.length === 0) {
+      dom.balanceBreakdown.innerHTML = '<li class="line-sub">内訳データがありません。</li>';
+    }
+  }
+
   function setLoading(isLoading) {
     dom.refreshButton.disabled = isLoading;
-    dom.refreshButton.textContent = isLoading ? "更新中..." : "今すぐ更新";
+    dom.refreshButton.dataset.loading = isLoading ? "true" : "false";
+    dom.refreshButton.setAttribute("aria-busy", isLoading ? "true" : "false");
+
+    if (dom.refreshLabel) {
+      dom.refreshLabel.textContent = isLoading ? "更新中" : "今すぐ更新";
+    }
   }
 
   function setSyncState(type, message) {
     if (type === "ok") {
-      dom.syncChip.className = "status-chip-ok";
+      dom.syncChip.className = "status-chip-ok shrink-0 whitespace-nowrap";
       dom.syncChip.textContent = "同期OK";
       dom.syncBanner.className = "mt-4 hidden rounded-xl border px-4 py-3 text-sm";
       dom.syncBanner.textContent = "";
       return;
     }
 
-    dom.syncChip.className = "status-chip-warn";
+    dom.syncChip.className = "status-chip-warn shrink-0 whitespace-nowrap";
     dom.syncChip.textContent = "同期注意";
     dom.syncBanner.className = "mt-4 rounded-xl border border-clay-500/40 bg-clay-100 px-4 py-3 text-sm text-clay-700";
     dom.syncBanner.textContent = message;
+  }
+
+  function createFallbackBalanceComposition(summary) {
+    var baseAmount = Math.max(0, toNumber(summary.collectionTotal));
+    var expensesInBase = Math.min(Math.max(0, toNumber(summary.expensesTotal)), baseAmount);
+    var refundBudget = Math.max(baseAmount - expensesInBase, 0);
+    var reimburseInBase = Math.min(Math.max(0, toNumber(summary.plannedReimbursementsTotal)), refundBudget);
+    var balanceInBase = Math.max(refundBudget - reimburseInBase, 0);
+    var shortageAmount = Math.max(Math.max(0, toNumber(summary.plannedReimbursementsTotal)) - refundBudget, 0);
+
+    var percentages = {
+      expenses: 0,
+      reimbursements: 0,
+      balance: 0,
+      shortage: 0
+    };
+
+    if (baseAmount > 0) {
+      percentages.expenses = (expensesInBase / baseAmount) * 100;
+      percentages.reimbursements = (reimburseInBase / baseAmount) * 100;
+      percentages.balance = (balanceInBase / baseAmount) * 100;
+      percentages.shortage = (shortageAmount / baseAmount) * 100;
+    } else if (shortageAmount > 0) {
+      percentages.shortage = 100;
+    }
+
+    return {
+      baseAmount: baseAmount,
+      expensesInBase: expensesInBase,
+      reimburseInBase: reimburseInBase,
+      balanceInBase: balanceInBase,
+      shortageAmount: shortageAmount,
+      percentages: percentages
+    };
   }
 
   async function fetchJsonWithTimeout(url, timeoutMs) {
@@ -432,6 +650,25 @@
     return (Number(value) * 100).toFixed(1) + "%";
   }
 
+  function formatPercent(value) {
+    var numeric = normalizeNumber(value, 0);
+    var rounded = Math.round(numeric * 10) / 10;
+    return (Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)) + "%";
+  }
+
+  function toNumber(value) {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (value === null || value === undefined) {
+      return 0;
+    }
+
+    var parsed = Number(String(value).replace(/[^0-9.-]/g, ""));
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
   function normalizeNumber(value, fallback) {
     var numeric = Number(value);
     if (Number.isFinite(numeric)) {
@@ -445,7 +682,7 @@
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
+      .replace(/\"/g, "&quot;")
       .replace(/'/g, "&#39;");
   }
 })();
