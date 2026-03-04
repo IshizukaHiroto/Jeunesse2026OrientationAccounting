@@ -257,9 +257,50 @@
     var remainder = availableAfterExpenses - distributed;
 
     if (remainder > 0) {
-      plan[maxIndex].adjustment = remainder;
-      plan[maxIndex].finalAmount += remainder;
-      plan[maxIndex].reduction = plan[maxIndex].plannedAmount - plan[maxIndex].finalAmount;
+      var allocationOrder = plan
+        .map(function (item, index) {
+          return {
+            index: index,
+            plannedAmount: item.plannedAmount
+          };
+        })
+        .sort(function (a, b) {
+          if (b.plannedAmount !== a.plannedAmount) {
+            return b.plannedAmount - a.plannedAmount;
+          }
+          return a.index - b.index;
+        })
+        .map(function (item) {
+          return item.index;
+        });
+
+      if (allocationOrder[0] !== maxIndex) {
+        allocationOrder = [maxIndex].concat(
+          allocationOrder.filter(function (index) {
+            return index !== maxIndex;
+          })
+        );
+      }
+
+      allocationOrder.forEach(function (index) {
+        if (remainder <= 0) {
+          return;
+        }
+
+        var headroom = plan[index].plannedAmount - plan[index].finalAmount;
+        if (headroom <= 0) {
+          return;
+        }
+
+        var allocation = Math.min(remainder, headroom);
+        plan[index].adjustment += allocation;
+        plan[index].finalAmount += allocation;
+        remainder -= allocation;
+      });
+
+      plan.forEach(function (item) {
+        item.reduction = item.plannedAmount - item.finalAmount;
+      });
     }
 
     return plan;

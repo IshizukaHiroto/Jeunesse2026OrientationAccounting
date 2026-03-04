@@ -74,6 +74,31 @@ test("computeProrationPlan allocates remainder to max planned reimbursement", ()
   assert.equal(plan[2].finalAmount, 12000);
 });
 
+test("computeProrationPlan never exceeds plannedAmount when distributing remainder", () => {
+  const summary = {
+    collectionTotal: 101,
+    expensesTotal: 0,
+    availableAfterExpenses: 101,
+    currentBalance: -1
+  };
+
+  const reimbursements = [
+    { id: 1, nickname: "A", reimbursementAmount: 100, approvalStatus: "承認済", invalidFlag: "有効" },
+    { id: 2, nickname: "B", reimbursementAmount: 1, approvalStatus: "承認済", invalidFlag: "有効" },
+    { id: 3, nickname: "C", reimbursementAmount: 1, approvalStatus: "承認済", invalidFlag: "有効" }
+  ];
+
+  const plan = computeProrationPlan(summary, reimbursements);
+
+  assert.equal(plan.reduce((sum, row) => sum + row.finalAmount, 0), 101);
+  assert.ok(plan.every((row) => row.finalAmount <= row.plannedAmount));
+  assert.ok(plan.every((row) => row.reduction >= 0));
+  assert.deepEqual(
+    plan.map((row) => row.finalAmount),
+    [100, 1, 0]
+  );
+});
+
 test("filterValidReimbursements keeps only approved and valid rows", () => {
   const rows = [
     { id: 1, approvalStatus: "承認済", invalidFlag: "有効", reimbursementAmount: 100 },
