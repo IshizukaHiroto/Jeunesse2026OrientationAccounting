@@ -164,7 +164,7 @@
           '<article class="line-item">' +
           '<div class="flex items-start justify-between gap-3">' +
           '<div><p class="line-title">' +
-          escapeHtml(row.nickname || "未入力") +
+          escapeHtml(row.nickname || "名前未設定") +
           "</p>" +
           '<p class="line-sub">確認日: ' +
           escapeHtml(row.confirmedDate || "--") +
@@ -225,7 +225,7 @@
           '<article class="line-item">' +
           '<div class="flex items-start justify-between gap-3">' +
           '<div><p class="line-title">' +
-          escapeHtml(row.nickname || "未入力") +
+          escapeHtml(row.nickname || "名前未設定") +
           " / " +
           escapeHtml(row.description || "内容未入力") +
           "</p>" +
@@ -282,26 +282,26 @@
     if (balance > 0) {
       dom.metricBalance.classList.add("text-court-700");
       dom.metricBalanceInfo.textContent =
-        "均等返金目安: 1人 " + formatYen(summary.equalRefundBase) + "（端数 " + formatYen(summary.equalRefundRemainder) + " は最後の1件で調整）";
+        "1人あたりの返金目安: " + formatYen(summary.equalRefundBase) + "（余り " + formatYen(summary.equalRefundRemainder) + " は最後に調整）";
 
-      dom.settlementTitle.textContent = "残高はプラスです。均等返金モードで精算してください。";
+      dom.settlementTitle.textContent = "お金が余っています。みんなに同じ金額を返します。";
       dom.settlementBody.textContent =
-        "集金済みメンバー全員に同額を返し、余りは最後の1件に加算して残高を0円にしてください。";
+        "集金した人全員に同じ金額を返し、余りは最後の1人に足して合計をぴったり合わせます。";
       dom.settlementFootnote.textContent =
-        "現在残高 " + formatYen(balance) + " / 基本返金額 " + formatYen(summary.equalRefundBase);
+        "いま余っているお金 " + formatYen(balance) + " / 基本の返金額 " + formatYen(summary.equalRefundBase);
       return;
     }
 
     if (balance < 0) {
       dom.metricBalance.classList.add("text-clay-700");
       dom.metricBalanceInfo.textContent =
-        "按分率: " + formatRate(summary.prorationRate) + "（返金予定額の大きい申請で端数調整）";
+        "返せる割合: " + formatRate(summary.prorationRate) + "（端数は最後に調整）";
 
-      dom.settlementTitle.textContent = "残高はマイナスです。按分モードで精算してください。";
+      dom.settlementTitle.textContent = "お金が足りません。返金額を同じ割合で減らします。";
       dom.settlementBody.textContent =
-        "追加集金は行わず、返金予定額を按分して総支払いが利用可能額に一致するよう調整してください。";
+        "追加で集金はしません。もとの返金予定を同じ割合で減らして、返せる合計金額に合わせます。";
       dom.settlementFootnote.textContent =
-        "利用可能額 " + formatYen(summary.availableAfterExpenses) + " / 返金予定合計 " + formatYen(summary.plannedReimbursementsTotal);
+        "いま返せるお金 " + formatYen(summary.availableAfterExpenses) + " / もとの返金予定合計 " + formatYen(summary.plannedReimbursementsTotal);
       return;
     }
 
