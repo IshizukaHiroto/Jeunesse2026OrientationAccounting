@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    @apply font-body bg-court-50 text-ink-900 antialiased;
+  }
+}
+
+@layer components {
+  .top-panel {
+    @apply rounded-3xl bg-gradient-to-br from-court-700 via-court-500 to-court-300 text-white shadow-panel;
+  }
+
+  .metric-card {
+    @apply rounded-2xl border border-court-100 bg-white p-4 shadow-panel;
+  }
+
+  .metric-label {
+    @apply text-xs font-bold tracking-[0.08em] uppercase text-court-700;
+  }
+
+  .metric-value {
+    @apply mt-2 text-2xl font-display font-semibold text-ink-900;
+  }
+
+  .section-shell {
+    @apply mt-4 rounded-2xl border border-court-100 bg-white shadow-panel;
+  }
+
+  .section-summary {
+    @apply cursor-pointer list-none px-4 py-3 font-display text-base font-semibold text-court-900;
+  }
+
+  .status-chip {
+    @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-bold tracking-wide;
+  }
+
+  .status-chip-ok {
+    @apply status-chip bg-court-100 text-court-900;
+  }
+
+  .status-chip-warn {
+    @apply status-chip bg-clay-100 text-clay-700;
+  }
+
+  .line-item {
+    @apply rounded-xl border border-court-100 bg-court-50/70 p-3;
+  }
+
+  .line-title {
+    @apply font-semibold text-ink-900;
+  }
+
+  .line-sub {
+    @apply mt-1 text-xs text-court-700;
+  }
+
+  .action-btn {
+    @apply inline-flex items-center rounded-lg bg-court-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-court-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-court-300;
+  }
+
+  .ghost-btn {
+    @apply inline-flex items-center rounded-lg border border-court-300 px-3 py-2 text-sm font-semibold text-court-900 transition hover:bg-court-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-court-300;
+  }
+}

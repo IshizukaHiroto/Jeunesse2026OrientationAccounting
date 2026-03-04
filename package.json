@@ -1,0 +1,13 @@
+{
+  "name": "jeunesse2026-orientation-accounting",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Jeunesse 2026 orientation accounting dashboard",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/styles/tailwind.css -o ./assets/styles.css --minify",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}
