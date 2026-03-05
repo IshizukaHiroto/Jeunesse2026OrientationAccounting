@@ -2,6 +2,7 @@
   "use strict";
 
   var LIST_STEP = 5;
+  var DEFAULT_REFUND_CAP = 700;
   var VIEW_IDS = ["summary", "collection", "expenses", "reimbursements"];
   var config = window.APP_CONFIG || {};
   var calc = window.AccountingCalc;
@@ -46,6 +47,8 @@
     settlementTitle: document.getElementById("settlement-title"),
     settlementBody: document.getElementById("settlement-body"),
     settlementFootnote: document.getElementById("settlement-footnote"),
+    refundCapRule: document.getElementById("refund-cap-rule"),
+    refundCapNote: document.getElementById("refund-cap-note"),
     collectionList: document.getElementById("collection-list"),
     expensesList: document.getElementById("expenses-list"),
     reimbursementsList: document.getElementById("reimbursements-list"),
@@ -274,6 +277,7 @@
       composition: balanceComposition
     };
 
+    renderRefundCap(payload.meta);
     dom.updatedAt.textContent = formatDateTime(payload.meta && payload.meta.generatedAt);
 
     dom.metricCollection.textContent = formatYen(summary.collectionTotal);
@@ -294,6 +298,7 @@
   }
 
   function renderEmpty() {
+    renderRefundCap(null);
     dom.updatedAt.textContent = "--";
     dom.metricCollection.textContent = formatYen(0);
     dom.metricOutflow.textContent = formatYen(0);
@@ -321,6 +326,30 @@
 
     if (state.currentView === "summary") {
       renderChartsFromSnapshot();
+    }
+  }
+
+  function resolveRefundCap(meta) {
+    var candidate = toNumber(meta && meta.refundCapPerFreshman);
+    if (candidate > 0) {
+      return candidate;
+    }
+    return DEFAULT_REFUND_CAP;
+  }
+
+  function formatRefundCap(value) {
+    return Math.round(Math.max(0, toNumber(value))).toLocaleString("ja-JP") + "円";
+  }
+
+  function renderRefundCap(meta) {
+    var label = formatRefundCap(resolveRefundCap(meta));
+
+    if (dom.refundCapRule) {
+      dom.refundCapRule.textContent = label;
+    }
+
+    if (dom.refundCapNote) {
+      dom.refundCapNote.textContent = label;
     }
   }
 

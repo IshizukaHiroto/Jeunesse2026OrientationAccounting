@@ -1,5 +1,7 @@
 # ダッシュボード運用手順
 
+図で全体を確認したい場合は、先に [`docs/visual-guide.md`](/Users/hirotoishizuka/Desktop/Jeunesse2026OrientationAccounting/docs/visual-guide.md) を参照してください。
+
 ## 1. 初期設定
 1. [`assets/config.js`](/Users/hirotoishizuka/Desktop/Jeunesse2026OrientationAccounting/assets/config.js) の `GAS_ENDPOINT` を本番URLに更新。
 2. `POLLING_MS` は既定値 `60000`（60秒）を維持。
@@ -25,6 +27,7 @@
 1. PCでは左サイドバー、スマホでは下部タブで `サマリー / 集金 / 経費 / 立替` を切り替える。
 2. 集金画面と立替画面は `昇順 / 降順` ボタンで名前順ソートできる（初期は昇順）。
 3. 一覧は上位5件から表示され、`もっと見る` で段階表示する。
+4. 返金上限（新入生1人あたり）はサマリーの精算ルールと立替画面説明に表示される。表示値は `meta.refundCapPerFreshman` を優先し、欠損・不正時は700円を表示する。
 
 ## 6. 障害時対応
 1. バナー表示が続く場合、まずGAS URLと公開権限を確認。
