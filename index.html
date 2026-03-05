@@ -17,150 +17,181 @@
     <link rel="stylesheet" href="./assets/styles.css" />
   </head>
   <body>
-    <div class="mx-auto max-w-5xl px-4 pb-16 pt-4 sm:px-6">
-      <header class="top-panel relative overflow-hidden p-5 sm:p-7">
-        <div class="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10"></div>
-        <div class="absolute -bottom-12 left-14 h-28 w-28 rounded-full bg-clay-100/30"></div>
+    <div class="app-shell">
+      <aside class="app-sidebar" aria-label="デスクトップメニュー">
+        <div class="sidebar-brand">
+          <p class="sidebar-eyebrow">Jeunesse 2026</p>
+          <h1 class="sidebar-heading">新歓会計ダッシュボード</h1>
+        </div>
 
-        <div class="relative flex items-start justify-between gap-3">
-          <div class="min-w-0">
-            <p class="font-display text-xs uppercase tracking-[0.14em] text-white/80">Jeunesse 2026</p>
-            <h1 class="mt-2 font-display text-2xl font-bold leading-tight sm:text-3xl">新歓会計ダッシュボード</h1>
-            <p class="mt-2 text-sm text-white/90">集金・経費・立替返金を1ページで確認できます。</p>
+        <nav class="sidebar-nav" aria-label="画面切替">
+          <button type="button" class="nav-item is-active" data-view="summary" aria-current="page">サマリー</button>
+          <button type="button" class="nav-item" data-view="collection">集金</button>
+          <button type="button" class="nav-item" data-view="expenses">経費</button>
+          <button type="button" class="nav-item" data-view="reimbursements">立替</button>
+        </nav>
+      </aside>
+
+      <main class="app-main">
+        <header class="top-panel relative overflow-hidden p-5 sm:p-7">
+          <div class="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10"></div>
+          <div class="absolute -bottom-12 left-14 h-28 w-28 rounded-full bg-clay-100/30"></div>
+
+          <div class="relative flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="font-display text-xs uppercase tracking-[0.14em] text-white/80">Jeunesse 2026</p>
+              <p class="mt-2 font-display text-2xl font-bold leading-tight sm:text-3xl">新歓会計ダッシュボード</p>
+              <p class="mt-2 text-sm text-white/90">左メニューで画面を切り替えて確認できます。</p>
+            </div>
+            <button
+              id="manual-refresh-btn"
+              class="ghost-btn refresh-btn shrink-0 border-white/60 bg-white/10 text-white hover:bg-white/20"
+              data-loading="false"
+              aria-busy="false"
+            >
+              <span id="refresh-label" class="refresh-label">今すぐ更新</span>
+            </button>
           </div>
-          <button
-            id="manual-refresh-btn"
-            class="ghost-btn refresh-btn shrink-0 border-white/60 bg-white/10 text-white hover:bg-white/20"
-            data-loading="false"
-            aria-busy="false"
-          >
-            <span id="refresh-label" class="refresh-label">今すぐ更新</span>
-            <span class="loading-dots" aria-hidden="true">
-              <span class="loading-dot"></span>
-              <span class="loading-dot"></span>
-              <span class="loading-dot"></span>
+
+          <div class="relative mt-4 flex items-center gap-2 overflow-hidden text-xs sm:text-sm">
+            <span id="sync-chip" class="status-chip-ok shrink-0 whitespace-nowrap">同期待機</span>
+            <span class="min-w-0 truncate rounded-full bg-white/20 px-3 py-1 text-white/90">
+              最終反映: <span id="updated-at">--</span>
             </span>
-          </button>
-        </div>
-
-        <div class="relative mt-4 flex items-center gap-2 overflow-hidden text-xs sm:text-sm">
-          <span id="sync-chip" class="status-chip-ok shrink-0 whitespace-nowrap">同期待機</span>
-          <span class="min-w-0 truncate rounded-full bg-white/20 px-3 py-1 text-white/90">
-            最終反映: <span id="updated-at">--</span>
-          </span>
-        </div>
-      </header>
-
-      <section id="sync-banner" class="mt-4 hidden rounded-xl border px-4 py-3 text-sm"></section>
-
-      <section class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <article class="metric-card">
-          <p class="metric-label">集金総額</p>
-          <p id="metric-collection" class="metric-value">¥0</p>
-          <p id="metric-paid-info" class="mt-1 text-xs text-court-700">済 0名 / 未 0名</p>
-        </article>
-        <article class="metric-card">
-          <p class="metric-label">支出 + 返金予定</p>
-          <p id="metric-outflow" class="metric-value">¥0</p>
-          <p id="metric-outflow-info" class="mt-1 text-xs text-court-700">経費 ¥0 / 返金予定 ¥0</p>
-        </article>
-        <article class="metric-card">
-          <p class="metric-label">現在残高</p>
-          <p id="metric-balance" class="metric-value">¥0</p>
-          <p id="metric-balance-info" class="mt-1 text-xs text-court-700">精算メモを確認してください</p>
-        </article>
-      </section>
-
-      <section class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-5">
-        <article class="rounded-2xl border border-court-100 bg-white p-4 shadow-panel sm:col-span-3">
-          <h2 class="font-display text-lg font-semibold text-court-900">集金と残高の円グラフ</h2>
-          <p class="mt-1 text-xs text-court-700">集金状況と、集金総額100%に対するお金の内訳を表示します。</p>
-          <div class="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <section class="rounded-xl border border-court-100 bg-court-50/60 p-3">
-              <h3 class="text-sm font-semibold text-court-900">集金進捗</h3>
-              <p class="mt-1 text-xs text-court-700">済 / 未 の割合</p>
-              <div class="mt-3 h-52">
-                <canvas id="collection-chart" aria-label="集金状況の円グラフ" role="img"></canvas>
-              </div>
-            </section>
-            <section class="rounded-xl border border-court-100 bg-court-50/60 p-3">
-              <h3 class="text-sm font-semibold text-court-900">残高内訳</h3>
-              <p class="mt-1 text-xs text-court-700">集金総額を100%として表示（不足分は外側赤リング）</p>
-              <div class="mt-3 h-52">
-                <canvas id="balance-chart" aria-label="残高内訳の円グラフ" role="img"></canvas>
-              </div>
-              <ul id="balance-breakdown" class="mt-3 space-y-1 text-xs text-court-900"></ul>
-            </section>
           </div>
-        </article>
+        </header>
 
-        <article id="settlement-guide" class="rounded-2xl border border-court-100 bg-white p-4 shadow-panel sm:col-span-2">
-          <h2 class="font-display text-lg font-semibold text-court-900">精算ガイド</h2>
-          <p id="settlement-title" class="mt-3 text-sm font-bold text-court-900">データ待機中</p>
-          <p id="settlement-body" class="mt-2 text-sm leading-relaxed text-court-800">JSON取得後に精算方針を表示します。</p>
-          <p id="settlement-footnote" class="mt-3 text-xs text-court-700"></p>
-        </article>
-      </section>
+        <section id="sync-banner" class="mt-4 hidden rounded-xl border px-4 py-3 text-sm"></section>
+        <section id="loading-notice" class="loading-notice mt-3 hidden" aria-live="polite"></section>
 
-      <details class="section-shell" open>
-        <summary class="section-summary">
-          <span>集金状況（上位5件）</span>
-          <span class="section-toggle" aria-hidden="true">
-            <span class="toggle-open">開く ▾</span>
-            <span class="toggle-close">閉じる ▴</span>
-          </span>
-        </summary>
-        <div class="border-t border-court-100 px-4 pb-4 pt-2">
-          <div id="collection-list" class="space-y-2"></div>
-          <button id="collection-more-btn" class="ghost-btn mt-3 hidden">もっと見る</button>
-        </div>
-      </details>
+        <section class="view-panel" data-view-panel="summary">
+          <section class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <article class="metric-card">
+              <p class="metric-label">集金総額</p>
+              <p id="metric-collection" class="metric-value">¥0</p>
+              <p id="metric-paid-info" class="mt-1 text-xs text-court-700">済 0名 / 未 0名</p>
+            </article>
+            <article class="metric-card">
+              <p class="metric-label">支出 + 返金予定</p>
+              <p id="metric-outflow" class="metric-value">¥0</p>
+              <p id="metric-outflow-info" class="mt-1 text-xs text-court-700">経費 ¥0 / 返金予定 ¥0</p>
+            </article>
+            <article class="metric-card">
+              <p class="metric-label">現在残高</p>
+              <p id="metric-balance" class="metric-value">¥0</p>
+              <p id="metric-balance-info" class="mt-1 text-xs text-court-700">精算メモを確認してください</p>
+            </article>
+          </section>
 
-      <details class="section-shell">
-        <summary class="section-summary">
-          <span>経費明細（上位5件）</span>
-          <span class="section-toggle" aria-hidden="true">
-            <span class="toggle-open">開く ▾</span>
-            <span class="toggle-close">閉じる ▴</span>
-          </span>
-        </summary>
-        <div class="border-t border-court-100 px-4 pb-4 pt-2">
-          <div id="expenses-list" class="space-y-2"></div>
-          <button id="expenses-more-btn" class="ghost-btn mt-3 hidden">もっと見る</button>
-        </div>
-      </details>
+          <article class="section-shell">
+            <div class="px-4 pb-4 pt-4">
+              <h2 class="font-display text-lg font-semibold text-court-900">集金と残高の円グラフ</h2>
+              <p class="mt-1 text-xs text-court-700">集金状況と、集金総額100%に対するお金の内訳を表示します。</p>
+              <div class="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <section class="rounded-xl border border-court-100 bg-court-50/60 p-3">
+                  <h3 class="text-sm font-semibold text-court-900">集金進捗</h3>
+                  <p class="mt-1 text-xs text-court-700">済 / 未 の割合</p>
+                  <div class="chart-stage mt-3">
+                    <canvas id="collection-chart" aria-label="集金状況の円グラフ" role="img"></canvas>
+                    <p id="collection-chart-empty" class="chart-empty">データを読み込み中です。</p>
+                  </div>
+                </section>
+                <section class="rounded-xl border border-court-100 bg-court-50/60 p-3">
+                  <h3 class="text-sm font-semibold text-court-900">残高内訳</h3>
+                  <p class="mt-1 text-xs text-court-700">集金総額を100%として表示（不足分は外側赤リング）</p>
+                  <div class="chart-stage mt-3">
+                    <canvas id="balance-chart" aria-label="残高内訳の円グラフ" role="img"></canvas>
+                    <p id="balance-chart-empty" class="chart-empty">データを読み込み中です。</p>
+                  </div>
+                  <ul id="balance-breakdown" class="mt-3 space-y-1 text-xs text-court-900"></ul>
+                </section>
+              </div>
+            </div>
+          </article>
 
-      <details class="section-shell">
-        <summary class="section-summary">
-          <span>立替一覧（承認済・有効のみ / 上位5件）</span>
-          <span class="section-toggle" aria-hidden="true">
-            <span class="toggle-open">開く ▾</span>
-            <span class="toggle-close">閉じる ▴</span>
-          </span>
-        </summary>
-        <div class="border-t border-court-100 px-4 pb-4 pt-2">
-          <div id="reimbursements-list" class="space-y-2"></div>
-          <button id="reimbursements-more-btn" class="ghost-btn mt-3 hidden">もっと見る</button>
-        </div>
-      </details>
+          <article id="settlement-guide" class="section-shell">
+            <div class="px-4 pb-4 pt-4">
+              <h2 class="font-display text-lg font-semibold text-court-900">精算ガイド</h2>
+              <p id="settlement-title" class="mt-3 text-sm font-bold text-court-900">データ待機中</p>
+              <p id="settlement-body" class="mt-2 text-sm leading-relaxed text-court-800">JSON取得後に精算方針を表示します。</p>
+              <p id="settlement-footnote" class="mt-3 text-xs text-court-700"></p>
+            </div>
+          </article>
 
-      <details class="section-shell">
-        <summary class="section-summary">
-          <span>精算ルール（2026）</span>
-          <span class="section-toggle" aria-hidden="true">
-            <span class="toggle-open">開く ▾</span>
-            <span class="toggle-close">閉じる ▴</span>
-          </span>
-        </summary>
-        <div class="space-y-2 border-t border-court-100 px-4 pb-4 pt-3 text-sm leading-relaxed text-court-900">
-          <p>1. 返す金額は「実際に払った金額」と「人数ぶんの上限額」の小さい方です。</p>
-          <p>2. お金が余っているときは、集金した人に同じ金額ずつ返します。</p>
-          <p>3. お金が足りないときは、返金額を同じ割合で減らします。</p>
-          <p>4. 端数は最後の1人（または1件）で合わせて、合計をぴったりにします。</p>
-          <p>5. 申請行は削除しません。間違いは「無効」にして残します。</p>
-        </div>
-      </details>
+          <article class="section-shell">
+            <div class="px-4 pb-4 pt-4">
+              <h2 class="font-display text-lg font-semibold text-court-900">精算ルール（2026）</h2>
+              <div class="mt-3 space-y-2 text-sm leading-relaxed text-court-900">
+                <p>1. 返金の予定額は、実際に払った金額と上限額を比べて、小さい方を使います。</p>
+                <p>2. お金が余っているときは、集金した人に同じ金額ずつ返します。</p>
+                <p>3. お金が不足しているときは、予定していた返金額を同じ割合で減らします。</p>
+                <p>4. 1円単位の差は最後に調整して、全体の合計を一致させます。</p>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="view-panel hidden" data-view-panel="collection" aria-hidden="true">
+          <article class="section-shell">
+            <div class="section-header">
+              <div>
+                <h2 class="font-display text-lg font-semibold text-court-900">集金状況</h2>
+                <p class="mt-1 text-xs text-court-700">上位5件から表示。名前で昇順/降順の切替ができます。</p>
+              </div>
+              <div class="sort-controls" role="group" aria-label="集金並び替え">
+                <button id="collection-sort-asc-btn" type="button" class="sort-btn" aria-pressed="true">昇順</button>
+                <button id="collection-sort-desc-btn" type="button" class="sort-btn" aria-pressed="false">降順</button>
+              </div>
+            </div>
+            <div class="px-4 pb-4 pt-3">
+              <div id="collection-list" class="space-y-2"></div>
+              <button id="collection-more-btn" class="ghost-btn mt-3 hidden">もっと見る</button>
+            </div>
+          </article>
+        </section>
+
+        <section class="view-panel hidden" data-view-panel="expenses" aria-hidden="true">
+          <article class="section-shell">
+            <div class="section-header">
+              <div>
+                <h2 class="font-display text-lg font-semibold text-court-900">経費明細</h2>
+                <p class="mt-1 text-xs text-court-700">上位5件から表示します。</p>
+              </div>
+            </div>
+            <div class="px-4 pb-4 pt-3">
+              <div id="expenses-list" class="space-y-2"></div>
+              <button id="expenses-more-btn" class="ghost-btn mt-3 hidden">もっと見る</button>
+            </div>
+          </article>
+        </section>
+
+        <section class="view-panel hidden" data-view-panel="reimbursements" aria-hidden="true">
+          <article class="section-shell">
+            <div class="section-header">
+              <div>
+                <h2 class="font-display text-lg font-semibold text-court-900">立替一覧（承認済・有効のみ）</h2>
+                <p class="mt-1 text-xs text-court-700">上位5件から表示。名前で昇順/降順の切替ができます。</p>
+              </div>
+              <div class="sort-controls" role="group" aria-label="立替並び替え">
+                <button id="reimbursements-sort-asc-btn" type="button" class="sort-btn" aria-pressed="true">昇順</button>
+                <button id="reimbursements-sort-desc-btn" type="button" class="sort-btn" aria-pressed="false">降順</button>
+              </div>
+            </div>
+            <div class="px-4 pb-4 pt-3">
+              <div id="reimbursements-list" class="space-y-2"></div>
+              <button id="reimbursements-more-btn" class="ghost-btn mt-3 hidden">もっと見る</button>
+            </div>
+          </article>
+        </section>
+      </main>
     </div>
+
+    <nav class="mobile-tabbar" aria-label="モバイルメニュー">
+      <button type="button" class="mobile-tab-item is-active" data-view="summary" aria-current="page">サマリー</button>
+      <button type="button" class="mobile-tab-item" data-view="collection">集金</button>
+      <button type="button" class="mobile-tab-item" data-view="expenses">経費</button>
+      <button type="button" class="mobile-tab-item" data-view="reimbursements">立替</button>
+    </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
     <script src="./src/calc.js"></script>

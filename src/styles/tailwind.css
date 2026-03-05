@@ -8,13 +8,89 @@
   }
 
   body {
-    @apply font-body bg-court-50 text-ink-900 antialiased;
+    @apply min-h-screen bg-court-50 font-body text-ink-900 antialiased;
   }
 }
 
 @layer components {
+  .app-shell {
+    @apply lg:grid lg:min-h-screen lg:grid-cols-[16rem_minmax(0,1fr)];
+  }
+
+  .app-sidebar {
+    @apply hidden lg:flex lg:flex-col lg:border-r lg:border-court-100 lg:bg-white;
+  }
+
+  .sidebar-brand {
+    @apply border-b border-court-100 px-5 py-5;
+  }
+
+  .sidebar-eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.12em] text-court-500;
+  }
+
+  .sidebar-heading {
+    @apply mt-2 font-display text-lg font-semibold text-court-900;
+  }
+
+  .sidebar-nav {
+    @apply flex flex-col gap-1 p-3;
+  }
+
+  .nav-item {
+    @apply w-full rounded-lg border border-transparent px-3 py-2 text-left text-sm font-semibold text-court-700;
+  }
+
+  .nav-item:hover {
+    @apply bg-court-50 text-court-900;
+  }
+
+  .nav-item.is-active {
+    @apply border-court-100 bg-court-100 text-court-900;
+  }
+
+  .app-main {
+    @apply px-4 pb-24 pt-4 sm:px-6 lg:px-8 lg:pb-10;
+  }
+
+  .mobile-tabbar {
+    @apply fixed bottom-0 left-0 right-0 z-40 grid grid-cols-4 gap-1 border-t border-court-100 bg-white px-2 py-2 lg:hidden;
+  }
+
+  .mobile-tab-item {
+    @apply inline-flex items-center justify-center rounded-lg border border-court-100 bg-court-50 px-2 py-2 text-xs font-semibold text-court-700;
+  }
+
+  .mobile-tab-item.is-active {
+    @apply border-court-100 bg-court-100 text-court-900;
+  }
+
+  .mobile-tab-item:active {
+    @apply bg-court-100;
+  }
+
+  .view-panel {
+    @apply mt-4 space-y-4;
+  }
+
+  .loading-notice {
+    @apply rounded-xl border border-court-100 bg-white px-4 py-3 text-sm text-court-700 shadow-panel;
+  }
+
   .top-panel {
     @apply rounded-3xl bg-gradient-to-br from-court-700 via-court-500 to-court-300 text-white shadow-panel;
+  }
+
+  .chart-stage {
+    @apply relative h-52 overflow-hidden rounded-lg border border-court-100 bg-white;
+  }
+
+  .chart-stage canvas {
+    @apply h-full w-full;
+  }
+
+  .chart-empty {
+    @apply absolute inset-0 flex items-center justify-center px-3 text-center text-sm font-semibold text-court-700;
   }
 
   .metric-card {
@@ -22,39 +98,32 @@
   }
 
   .metric-label {
-    @apply text-xs font-bold tracking-[0.08em] uppercase text-court-700;
+    @apply text-xs font-bold uppercase tracking-[0.08em] text-court-700;
   }
 
   .metric-value {
-    @apply mt-2 text-2xl font-display font-semibold text-ink-900;
+    @apply mt-2 font-display text-2xl font-semibold text-ink-900;
   }
 
   .section-shell {
-    @apply mt-4 rounded-2xl border border-court-100 bg-white shadow-panel;
+    @apply rounded-2xl border border-court-100 bg-white shadow-panel;
   }
 
-  .section-summary {
-    @apply flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 font-display text-base font-semibold text-court-900;
+  .section-header {
+    @apply flex flex-wrap items-center justify-between gap-3 border-b border-court-100 px-4 py-4;
   }
 
-  .section-summary::-webkit-details-marker {
-    display: none;
+  .sort-controls {
+    @apply inline-flex rounded-lg border border-court-100 bg-court-50 p-1;
   }
 
-  .section-toggle {
-    @apply inline-flex items-center rounded-full bg-court-100 px-3 py-1 text-xs font-bold tracking-wide text-court-900;
+  .sort-btn {
+    @apply rounded-md border border-transparent px-3 py-1 text-xs font-semibold text-court-700;
   }
 
-  .toggle-close {
-    display: none;
-  }
-
-  details[open] > .section-summary .toggle-open {
-    display: none;
-  }
-
-  details[open] > .section-summary .toggle-close {
-    display: inline;
+  .sort-btn[aria-pressed="true"],
+  .sort-btn.is-active {
+    @apply border-court-100 bg-white text-court-900;
   }
 
   .status-chip {
@@ -82,49 +151,14 @@
   }
 
   .action-btn {
-    @apply inline-flex items-center rounded-lg bg-court-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-court-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-court-300;
+    @apply inline-flex items-center rounded-lg bg-court-700 px-3 py-2 text-sm font-semibold text-white hover:bg-court-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-court-300;
   }
 
   .ghost-btn {
-    @apply inline-flex items-center rounded-lg border border-court-300 px-3 py-2 text-sm font-semibold text-court-900 transition hover:bg-court-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-court-300;
+    @apply inline-flex items-center rounded-lg border border-court-300 px-3 py-2 text-sm font-semibold text-court-900 hover:bg-court-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-court-300;
   }
 
   .refresh-btn {
     @apply min-h-10 min-w-[108px] justify-center whitespace-nowrap px-3;
-  }
-
-  .refresh-btn .loading-dots {
-    display: none;
-  }
-
-  .refresh-btn[data-loading="true"] .loading-dots {
-    @apply inline-flex items-center gap-1;
-  }
-
-  .loading-dot {
-    @apply h-1.5 w-1.5 rounded-full bg-current;
-    animation: loading-dot-blink 1.2s infinite ease-in-out;
-  }
-
-  .loading-dot:nth-child(2) {
-    animation-delay: 0.2s;
-  }
-
-  .loading-dot:nth-child(3) {
-    animation-delay: 0.4s;
-  }
-}
-
-@keyframes loading-dot-blink {
-  0%,
-  80%,
-  100% {
-    opacity: 0.2;
-    transform: scale(0.85);
-  }
-
-  40% {
-    opacity: 1;
-    transform: scale(1);
   }
 }

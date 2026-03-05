@@ -2,6 +2,7 @@
   "use strict";
 
   var LIST_STEP = 5;
+  var VIEW_IDS = ["summary", "collection", "expenses", "reimbursements"];
   var config = window.APP_CONFIG || {};
   var calc = window.AccountingCalc;
 
@@ -12,6 +13,8 @@
   var state = {
     latestPayload: null,
     isRefreshing: false,
+    currentView: "summary",
+    chartSnapshot: null,
     charts: {
       collection: null,
       balance: null
@@ -20,6 +23,10 @@
       collection: LIST_STEP,
       expenses: LIST_STEP,
       reimbursements: LIST_STEP
+    },
+    sort: {
+      collection: "asc",
+      reimbursements: "asc"
     }
   };
 
@@ -29,6 +36,7 @@
     syncChip: document.getElementById("sync-chip"),
     updatedAt: document.getElementById("updated-at"),
     syncBanner: document.getElementById("sync-banner"),
+    loadingNotice: document.getElementById("loading-notice"),
     metricCollection: document.getElementById("metric-collection"),
     metricOutflow: document.getElementById("metric-outflow"),
     metricBalance: document.getElementById("metric-balance"),
@@ -44,36 +52,166 @@
     collectionMoreButton: document.getElementById("collection-more-btn"),
     expensesMoreButton: document.getElementById("expenses-more-btn"),
     reimbursementsMoreButton: document.getElementById("reimbursements-more-btn"),
+    collectionSortAscButton: document.getElementById("collection-sort-asc-btn"),
+    collectionSortDescButton: document.getElementById("collection-sort-desc-btn"),
+    reimbursementsSortAscButton: document.getElementById("reimbursements-sort-asc-btn"),
+    reimbursementsSortDescButton: document.getElementById("reimbursements-sort-desc-btn"),
     collectionChart: document.getElementById("collection-chart"),
     balanceChart: document.getElementById("balance-chart"),
-    balanceBreakdown: document.getElementById("balance-breakdown")
+    collectionChartEmpty: document.getElementById("collection-chart-empty"),
+    balanceChartEmpty: document.getElementById("balance-chart-empty"),
+    balanceBreakdown: document.getElementById("balance-breakdown"),
+    viewButtons: document.querySelectorAll("[data-view]"),
+    viewPanels: document.querySelectorAll("[data-view-panel]")
   };
 
   attachEvents();
+  switchView(state.currentView);
+  updateSortControlUI("collection");
+  updateSortControlUI("reimbursements");
+
   refreshData({ source: "initial" });
   window.setInterval(function () {
     refreshData({ source: "polling" });
   }, normalizeNumber(config.POLLING_MS, 60000));
 
   function attachEvents() {
-    dom.refreshButton.addEventListener("click", function () {
-      refreshData({ source: "manual", force: true });
+    if (dom.refreshButton) {
+      dom.refreshButton.addEventListener("click", function () {
+        refreshData({ source: "manual", force: true });
+      });
+    }
+
+    if (dom.collectionMoreButton) {
+      dom.collectionMoreButton.addEventListener("click", function () {
+        toggleListLimit("collection", state.latestPayload ? state.latestPayload.collection.length : 0);
+        renderCollectionList((state.latestPayload && state.latestPayload.collection) || []);
+      });
+    }
+
+    if (dom.expensesMoreButton) {
+      dom.expensesMoreButton.addEventListener("click", function () {
+        toggleListLimit("expenses", state.latestPayload ? state.latestPayload.expenses.length : 0);
+        renderExpensesList((state.latestPayload && state.latestPayload.expenses) || []);
+      });
+    }
+
+    if (dom.reimbursementsMoreButton) {
+      dom.reimbursementsMoreButton.addEventListener("click", function () {
+        toggleListLimit("reimbursements", state.latestPayload ? state.latestPayload.reimbursements.length : 0);
+        renderReimbursementsList((state.latestPayload && state.latestPayload.reimbursements) || []);
+      });
+    }
+
+    if (dom.collectionSortAscButton) {
+      dom.collectionSortAscButton.addEventListener("click", function () {
+        setSortDirection("collection", "asc");
+      });
+    }
+
+    if (dom.collectionSortDescButton) {
+      dom.collectionSortDescButton.addEventListener("click", function () {
+        setSortDirection("collection", "desc");
+      });
+    }
+
+    if (dom.reimbursementsSortAscButton) {
+      dom.reimbursementsSortAscButton.addEventListener("click", function () {
+        setSortDirection("reimbursements", "asc");
+      });
+    }
+
+    if (dom.reimbursementsSortDescButton) {
+      dom.reimbursementsSortDescButton.addEventListener("click", function () {
+        setSortDirection("reimbursements", "desc");
+      });
+    }
+
+    Array.prototype.forEach.call(dom.viewButtons, function (button) {
+      button.addEventListener("click", function () {
+        var viewId = button.getAttribute("data-view");
+        switchView(viewId);
+      });
+    });
+  }
+
+  function switchView(viewId) {
+    if (VIEW_IDS.indexOf(viewId) === -1) {
+      return;
+    }
+
+    state.currentView = viewId;
+
+    Array.prototype.forEach.call(dom.viewPanels, function (panel) {
+      var panelId = panel.getAttribute("data-view-panel");
+      var isActive = panelId === viewId;
+      panel.classList.toggle("hidden", !isActive);
+      panel.setAttribute("aria-hidden", isActive ? "false" : "true");
     });
 
-    dom.collectionMoreButton.addEventListener("click", function () {
-      toggleListLimit("collection", state.latestPayload ? state.latestPayload.collection.length : 0);
-      renderCollectionList((state.latestPayload && state.latestPayload.collection) || []);
+    Array.prototype.forEach.call(dom.viewButtons, function (button) {
+      var isActive = button.getAttribute("data-view") === viewId;
+      button.classList.toggle("is-active", isActive);
+      if (isActive) {
+        button.setAttribute("aria-current", "page");
+      } else {
+        button.removeAttribute("aria-current");
+      }
     });
 
-    dom.expensesMoreButton.addEventListener("click", function () {
-      toggleListLimit("expenses", state.latestPayload ? state.latestPayload.expenses.length : 0);
-      renderExpensesList((state.latestPayload && state.latestPayload.expenses) || []);
-    });
+    if (viewId === "summary") {
+      renderChartsFromSnapshot();
+    }
+  }
 
-    dom.reimbursementsMoreButton.addEventListener("click", function () {
-      toggleListLimit("reimbursements", state.latestPayload ? state.latestPayload.reimbursements.length : 0);
-      renderReimbursementsList((state.latestPayload && state.latestPayload.reimbursements) || []);
-    });
+  function setSortDirection(key, direction) {
+    if (!state.sort[key]) {
+      return;
+    }
+
+    var normalized = direction === "desc" ? "desc" : "asc";
+    if (state.sort[key] === normalized) {
+      return;
+    }
+
+    state.sort[key] = normalized;
+    state.limits[key] = LIST_STEP;
+    updateSortControlUI(key);
+
+    if (!state.latestPayload) {
+      return;
+    }
+
+    if (key === "collection") {
+      renderCollectionList(state.latestPayload.collection || []);
+      return;
+    }
+
+    if (key === "reimbursements") {
+      renderReimbursementsList(state.latestPayload.reimbursements || []);
+    }
+  }
+
+  function updateSortControlUI(key) {
+    if (key === "collection") {
+      setSortButtonState(dom.collectionSortAscButton, state.sort.collection === "asc");
+      setSortButtonState(dom.collectionSortDescButton, state.sort.collection === "desc");
+      return;
+    }
+
+    if (key === "reimbursements") {
+      setSortButtonState(dom.reimbursementsSortAscButton, state.sort.reimbursements === "asc");
+      setSortButtonState(dom.reimbursementsSortDescButton, state.sort.reimbursements === "desc");
+    }
+  }
+
+  function setSortButtonState(button, isActive) {
+    if (!button) {
+      return;
+    }
+
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+    button.classList.toggle("is-active", isActive);
   }
 
   async function refreshData(options) {
@@ -130,6 +268,12 @@
     var expenses = Array.isArray(payload.expenses) ? payload.expenses : [];
     var reimbursements = Array.isArray(payload.reimbursements) ? payload.reimbursements : [];
 
+    state.chartSnapshot = {
+      paidMembers: summary.paidMembers,
+      unpaidMembers: summary.unpaidMembers,
+      composition: balanceComposition
+    };
+
     dom.updatedAt.textContent = formatDateTime(payload.meta && payload.meta.generatedAt);
 
     dom.metricCollection.textContent = formatYen(summary.collectionTotal);
@@ -143,9 +287,10 @@
     renderCollectionList(collection);
     renderExpensesList(expenses);
     renderReimbursementsList(reimbursements);
-    renderCollectionChart(summary.paidMembers, summary.unpaidMembers);
-    renderBalanceChart(balanceComposition);
-    renderBalanceBreakdown(balanceComposition);
+
+    if (state.currentView === "summary") {
+      renderChartsFromSnapshot();
+    }
   }
 
   function renderEmpty() {
@@ -159,18 +304,114 @@
     dom.collectionList.innerHTML = '<p class="line-sub">表示データがありません。</p>';
     dom.expensesList.innerHTML = '<p class="line-sub">表示データがありません。</p>';
     dom.reimbursementsList.innerHTML = '<p class="line-sub">表示データがありません。</p>';
-    renderCollectionChart(0, 0);
-    renderBalanceChart(createFallbackBalanceComposition({
-      collectionTotal: 0,
-      expensesTotal: 0,
-      plannedReimbursementsTotal: 0
-    }));
-    renderBalanceBreakdown(null);
+
+    state.chartSnapshot = {
+      paidMembers: 0,
+      unpaidMembers: 0,
+      composition: createFallbackBalanceComposition({
+        collectionTotal: 0,
+        expensesTotal: 0,
+        plannedReimbursementsTotal: 0
+      })
+    };
+
+    dom.settlementTitle.textContent = "データ待機中";
+    dom.settlementBody.textContent = "JSON取得後に精算方針を表示します。";
+    dom.settlementFootnote.textContent = "";
+
+    if (state.currentView === "summary") {
+      renderChartsFromSnapshot();
+    }
+  }
+
+  function renderChartsFromSnapshot() {
+    if (!state.chartSnapshot) {
+      toggleChartPlaceholders(true);
+      renderBalanceBreakdown(null);
+      return;
+    }
+
+    toggleChartPlaceholders(false);
+    renderCollectionChart(state.chartSnapshot.paidMembers, state.chartSnapshot.unpaidMembers);
+    renderBalanceChart(state.chartSnapshot.composition);
+    renderBalanceBreakdown(state.chartSnapshot.composition);
+  }
+
+  function toggleChartPlaceholders(showPlaceholder) {
+    if (dom.collectionChart) {
+      dom.collectionChart.classList.toggle("hidden", showPlaceholder);
+    }
+    if (dom.balanceChart) {
+      dom.balanceChart.classList.toggle("hidden", showPlaceholder);
+    }
+    if (dom.collectionChartEmpty) {
+      dom.collectionChartEmpty.classList.toggle("hidden", !showPlaceholder);
+    }
+    if (dom.balanceChartEmpty) {
+      dom.balanceChartEmpty.classList.toggle("hidden", !showPlaceholder);
+    }
+  }
+
+  function sortRowsByState(key, rows) {
+    if (!Array.isArray(rows)) {
+      return [];
+    }
+
+    if (key !== "collection" && key !== "reimbursements") {
+      return rows.slice();
+    }
+
+    if (calc.sortByNickname) {
+      return calc.sortByNickname(rows, state.sort[key]);
+    }
+
+    return fallbackSortByNickname(rows, state.sort[key]);
+  }
+
+  function fallbackSortByNickname(rows, direction) {
+    var dir = direction === "desc" ? "desc" : "asc";
+
+    return rows
+      .map(function (row, index) {
+        return {
+          row: row,
+          index: index,
+          nickname: normalizeName(row && row.nickname)
+        };
+      })
+      .sort(function (a, b) {
+        var aHasName = a.nickname.length > 0;
+        var bHasName = b.nickname.length > 0;
+
+        if (aHasName !== bHasName) {
+          return aHasName ? -1 : 1;
+        }
+
+        if (!aHasName && !bHasName) {
+          return a.index - b.index;
+        }
+
+        var compared = a.nickname.localeCompare(b.nickname, "ja", { sensitivity: "base", numeric: true });
+        if (compared !== 0) {
+          return dir === "asc" ? compared : -compared;
+        }
+
+        return a.index - b.index;
+      })
+      .map(function (item) {
+        return item.row;
+      });
+  }
+
+  function normalizeName(value) {
+    return String(value || "").trim();
   }
 
   function renderCollectionList(rows) {
+    var sortedRows = sortRowsByState("collection", rows);
+
     renderList({
-      rows: rows,
+      rows: sortedRows,
       limitKey: "collection",
       container: dom.collectionList,
       button: dom.collectionMoreButton,
@@ -229,8 +470,10 @@
   }
 
   function renderReimbursementsList(rows) {
+    var sortedRows = sortRowsByState("reimbursements", rows);
+
     renderList({
-      rows: rows,
+      rows: sortedRows,
       limitKey: "reimbursements",
       container: dom.reimbursementsList,
       button: dom.reimbursementsMoreButton,
@@ -300,7 +543,11 @@
     if (balance > 0) {
       dom.metricBalance.classList.add("text-court-700");
       dom.metricBalanceInfo.textContent =
-        "1人あたりの返金目安: " + formatYen(summary.equalRefundBase) + "（余り " + formatYen(summary.equalRefundRemainder) + " は最後に調整）";
+        "1人あたりの返金目安: " +
+        formatYen(summary.equalRefundBase) +
+        "（余り " +
+        formatYen(summary.equalRefundRemainder) +
+        " は最後に調整）";
 
       dom.settlementTitle.textContent = "お金が余っています。みんなに同じ金額を返します。";
       dom.settlementBody.textContent =
@@ -312,14 +559,16 @@
 
     if (balance < 0) {
       dom.metricBalance.classList.add("text-clay-700");
-      dom.metricBalanceInfo.textContent =
-        "返せる割合: " + formatRate(summary.prorationRate) + "（端数は最後に調整）";
+      dom.metricBalanceInfo.textContent = "返せる割合: " + formatRate(summary.prorationRate) + "（端数は最後に調整）";
 
       dom.settlementTitle.textContent = "お金が足りません。返金額を同じ割合で減らします。";
       dom.settlementBody.textContent =
         "追加で集金はしません。もとの返金予定を同じ割合で減らして、返せる合計金額に合わせます。";
       dom.settlementFootnote.textContent =
-        "いま返せるお金 " + formatYen(summary.availableAfterExpenses) + " / もとの返金予定合計 " + formatYen(summary.plannedReimbursementsTotal);
+        "いま返せるお金 " +
+        formatYen(summary.availableAfterExpenses) +
+        " / もとの返金予定合計 " +
+        formatYen(summary.plannedReimbursementsTotal);
       return;
     }
 
@@ -354,6 +603,7 @@
         ]
       },
       options: {
+        animation: false,
         maintainAspectRatio: false,
         plugins: {
           legend: {
@@ -436,6 +686,7 @@
         ]
       },
       options: {
+        animation: false,
         maintainAspectRatio: false,
         cutout: "48%",
         plugins: {
@@ -533,12 +784,33 @@
   }
 
   function setLoading(isLoading) {
+    if (!dom.refreshButton) {
+      return;
+    }
+
     dom.refreshButton.disabled = isLoading;
     dom.refreshButton.dataset.loading = isLoading ? "true" : "false";
     dom.refreshButton.setAttribute("aria-busy", isLoading ? "true" : "false");
 
     if (dom.refreshLabel) {
-      dom.refreshLabel.textContent = isLoading ? "更新中" : "今すぐ更新";
+      dom.refreshLabel.textContent = isLoading ? "更新中..." : "今すぐ更新";
+    }
+
+    if (dom.loadingNotice) {
+      if (isLoading) {
+        dom.loadingNotice.classList.remove("hidden");
+        dom.loadingNotice.textContent = state.latestPayload
+          ? "最新データを取得中です。現在の表示は前回取得データです。"
+          : "初回データを読み込み中です。数秒お待ちください。";
+      } else {
+        dom.loadingNotice.classList.add("hidden");
+        dom.loadingNotice.textContent = "";
+      }
+    }
+
+    if (isLoading && !state.latestPayload && dom.syncChip) {
+      dom.syncChip.className = "status-chip-ok shrink-0 whitespace-nowrap";
+      dom.syncChip.textContent = "同期中";
     }
   }
 
