@@ -286,7 +286,7 @@ function getTextByHeaderCandidates_(row, candidates) {
 }
 
 function normalizeDate_(value) {
-  if (!value) {
+  if (value === null || value === undefined) {
     return "";
   }
 
@@ -294,7 +294,50 @@ function normalizeDate_(value) {
     return Utilities.formatDate(value, Session.getScriptTimeZone(), "yyyy-MM-dd");
   }
 
-  return text_(value);
+  if (typeof value === "number" && isFinite(value)) {
+    var dateFromNumber = normalizeDateSerial_(value);
+    if (dateFromNumber !== "") {
+      return dateFromNumber;
+    }
+  }
+
+  var textValue = text_(value);
+  if (textValue === "") {
+    return "";
+  }
+
+  if (/^-?\d+(\.\d+)?$/.test(textValue)) {
+    var numericValue = Number(textValue);
+    if (isFinite(numericValue)) {
+      var dateFromTextNumber = normalizeDateSerial_(numericValue);
+      if (dateFromTextNumber !== "") {
+        return dateFromTextNumber;
+      }
+    }
+  }
+
+  return textValue;
+}
+
+function normalizeDateSerial_(serial) {
+  var normalizedSerial = Math.floor(Number(serial));
+  if (!isFinite(normalizedSerial)) {
+    return "";
+  }
+
+  // Guard against non-date IDs while still covering practical sheet date ranges.
+  if (normalizedSerial < 20000 || normalizedSerial > 80000) {
+    return "";
+  }
+
+  var serialEpochUtc = Date.UTC(1899, 11, 30);
+  var millis = serialEpochUtc + normalizedSerial * 24 * 60 * 60 * 1000;
+  var date = new Date(millis);
+  if (!isFinite(date.getTime())) {
+    return "";
+  }
+
+  return Utilities.formatDate(date, Session.getScriptTimeZone(), "yyyy-MM-dd");
 }
 
 function getSheetByCandidates_(ss, candidates) {
