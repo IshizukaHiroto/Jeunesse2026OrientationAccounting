@@ -1,3 +1,7 @@
 .codex/
 .env
 node_modules/
+testMovies/raw/
+testMovies/review/
+testMovies/*.webm
+testMovies/record-dashboard.cjs
