@@ -1,0 +1,13 @@
+flowchart TD
+  A["会計担当がシートを更新<br/>集金管理 / 立替返金管理 / 経費記録"] --> B["GAS doGet がシートを読み取り"]
+  B --> C{"立替データの判定"}
+  C -->|承認済 かつ 有効| D["reimbursements に採用"]
+  C -->|未承認 or 無効| E["公開JSONから除外"]
+  B --> F["公開JSONを返却<br/>meta / collection / expenses / reimbursements / summary"]
+  D --> F
+  E --> F
+  F --> G["ダッシュボードが取得<br/>60秒ポーリング or 手動更新"]
+  G --> H{"取得成功?"}
+  H -->|成功| I["画面を最新データへ更新"]
+  H -->|失敗| J["警告表示 + 前回成功データを維持"]
+  I --> K["返金上限表示を更新<br/>meta.refundCapPerFreshman が有効値なら採用<br/>欠損・不正時は 700円"]

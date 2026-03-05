@@ -1,0 +1,20 @@
+flowchart TD
+  ROOT["Jeunesse 2026 新歓会計ダッシュボード"] --> SS["Googleスプレッドシート"]
+  ROOT --> GAS["GAS Webアプリ"]
+  ROOT --> WEB["ダッシュボード（index.html）"]
+
+  SS --> SS1["設定<br/>集金額 / 返金上限 / 期間"]
+  SS --> SS2["集金管理<br/>ニックネーム / 支払い状況 / 集金額"]
+  SS --> SS3["立替返金管理<br/>支払い金額 / 新入生人数 / 承認状況 / 無効フラグ"]
+  SS --> SS4["経費記録<br/>日付 / 内容 / 金額"]
+
+  GAS --> J1["JSON meta<br/>generatedAt / seasonYear / refundCapPerFreshman"]
+  GAS --> J2["JSON collection / expenses / reimbursements / summary"]
+  GAS --> J3["フィルタ規約<br/>未承認・無効・個人情報・レシートURLを除外"]
+
+  WEB --> V1["サマリー画面"]
+  WEB --> V2["集金画面"]
+  WEB --> V3["経費画面"]
+  WEB --> V4["立替画面"]
+  V1 --> V1A["精算ルールに返金上限を表示"]
+  V4 --> V4A["画面説明に返金上限を表示"]
