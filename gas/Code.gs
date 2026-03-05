@@ -94,24 +94,34 @@ function readReimbursements_(sheet, refundCapPerFreshman) {
   var rows = toRows_(sheet);
   return rows
     .map(function (row, index) {
-      var paymentAmount = Math.max(0, toYen_(row["支払い金額"]));
-      var freshmanCount = Math.max(0, toYen_(row["新入生の人数"]));
+      var appliedDate = getByHeaderCandidates_(row, ["申請日", "日付"]);
+      var nickname = getTextByHeaderCandidates_(row, [
+        "立替者ニックネーム",
+        "立替者(ニックネーム)",
+        "立替者（ニックネーム）",
+        "申請者名",
+        "申請者名(上記に名前がない場合)",
+        "申請者名（上記に名前がない場合）"
+      ]);
+      var description = getTextByHeaderCandidates_(row, ["内容", "内容（記述）", "内容(記述)"]);
+      var paymentAmount = Math.max(0, toYen_(getByHeaderCandidates_(row, ["支払い金額", "立替金額の合計(数字のみ記載)"])));
+      var freshmanCount = Math.max(0, toYen_(getByHeaderCandidates_(row, ["新入生の人数", "立て替えた新入生の合計人数"])));
       var computedCapAmount = Math.max(0, Math.min(paymentAmount, freshmanCount * refundCapPerFreshman));
-      var reimbursementAmount = Math.max(0, toYen_(row["返金額"]));
+      var reimbursementAmount = Math.max(0, toYen_(getByHeaderCandidates_(row, ["返金額"])));
       var normalizedReimbursementAmount = reimbursementAmount > 0 ? reimbursementAmount : computedCapAmount;
 
       return {
         id: index + 2,
-        appliedDate: normalizeDate_(row["申請日"]),
-        nickname: text_(row["立替者ニックネーム"]),
-        description: text_(row["内容"]),
+        appliedDate: normalizeDate_(appliedDate),
+        nickname: nickname,
+        description: description,
         paymentAmount: paymentAmount,
         freshmanCount: freshmanCount,
         reimbursementAmount: Math.min(normalizedReimbursementAmount, computedCapAmount),
-        approvalStatus: text_(row["承認状況"]) || "未承認",
-        refundStatus: text_(row["返金状況"]) || "未返金",
-        invalidFlag: text_(row["無効フラグ"]) || "有効",
-        invalidReason: text_(row["無効理由"])
+        approvalStatus: getTextByHeaderCandidates_(row, ["承認状況"]) || "未承認",
+        refundStatus: getTextByHeaderCandidates_(row, ["返金状況"]) || "未返金",
+        invalidFlag: getTextByHeaderCandidates_(row, ["無効フラグ"]) || "有効",
+        invalidReason: getTextByHeaderCandidates_(row, ["無効理由"])
       };
     })
     .filter(function (row) {
@@ -228,6 +238,51 @@ function toYen_(value) {
 
 function text_(value) {
   return String(value || "").trim();
+}
+
+function normalizeHeader_(header) {
+  return text_(header)
+    .replace(/（/g, "(")
+    .replace(/）/g, ")")
+    .replace(/[ 　]/g, "");
+}
+
+function getByHeaderCandidates_(row, candidates) {
+  if (!row || typeof row !== "object") {
+    return "";
+  }
+
+  var keys = Object.keys(row);
+  var normalizedKeyMap = {};
+
+  keys.forEach(function (key) {
+    normalizedKeyMap[normalizeHeader_(key)] = key;
+  });
+
+  for (var i = 0; i < candidates.length; i += 1) {
+    var candidate = candidates[i];
+    if (candidate in row) {
+      return row[candidate];
+    }
+
+    var normalizedCandidate = normalizeHeader_(candidate);
+    if (normalizedCandidate in normalizedKeyMap) {
+      return row[normalizedKeyMap[normalizedCandidate]];
+    }
+  }
+
+  return "";
+}
+
+function getTextByHeaderCandidates_(row, candidates) {
+  for (var i = 0; i < candidates.length; i += 1) {
+    var value = text_(getByHeaderCandidates_(row, [candidates[i]]));
+    if (value !== "") {
+      return value;
+    }
+  }
+
+  return "";
 }
 
 function normalizeDate_(value) {
