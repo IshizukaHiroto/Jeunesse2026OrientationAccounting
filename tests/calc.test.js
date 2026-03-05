@@ -5,7 +5,8 @@ const {
   computeEqualRefundPlan,
   computeProrationPlan,
   computeBalanceComposition,
-  filterValidReimbursements
+  filterValidReimbursements,
+  sortByNickname
 } = require("../src/calc");
 
 test("computeSummary calculates totals with approved and valid reimbursements only", () => {
@@ -113,6 +114,65 @@ test("filterValidReimbursements keeps only approved and valid rows", () => {
     filtered.map((row) => row.id),
     [1]
   );
+});
+
+test("sortByNickname sorts rows by nickname in ascending order", () => {
+  const rows = [
+    { id: 1, nickname: "たろう" },
+    { id: 2, nickname: "あいこ" },
+    { id: 3, nickname: "さくら" }
+  ];
+
+  const sorted = sortByNickname(rows, "asc");
+
+  assert.deepEqual(
+    sorted.map((row) => row.id),
+    [2, 3, 1]
+  );
+});
+
+test("sortByNickname sorts rows by nickname in descending order", () => {
+  const rows = [
+    { id: 1, nickname: "たろう" },
+    { id: 2, nickname: "あいこ" },
+    { id: 3, nickname: "さくら" }
+  ];
+
+  const sorted = sortByNickname(rows, "desc");
+
+  assert.deepEqual(
+    sorted.map((row) => row.id),
+    [1, 3, 2]
+  );
+});
+
+test("sortByNickname places blank nicknames at the end", () => {
+  const rows = [
+    { id: 1, nickname: "" },
+    { id: 2, nickname: "あいこ" },
+    { id: 3 },
+    { id: 4, nickname: "さくら" }
+  ];
+
+  const sorted = sortByNickname(rows, "asc");
+
+  assert.deepEqual(
+    sorted.map((row) => row.id),
+    [2, 4, 1, 3]
+  );
+});
+
+test("sortByNickname does not mutate original rows", () => {
+  const rows = [
+    { id: 1, nickname: "たろう" },
+    { id: 2, nickname: "あいこ" }
+  ];
+  const before = rows.map((row) => row.id);
+
+  const sorted = sortByNickname(rows, "asc");
+
+  assert.deepEqual(rows.map((row) => row.id), before);
+  assert.notEqual(sorted, rows);
 });
 
 test("computeSummary clamps prorationRate at zero when available budget is negative", () => {

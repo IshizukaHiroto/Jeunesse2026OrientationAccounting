@@ -92,6 +92,49 @@
       });
   }
 
+  function sortByNickname(rows, direction) {
+    if (!Array.isArray(rows)) {
+      return [];
+    }
+
+    var dir = direction === "desc" ? "desc" : "asc";
+    var collator = new Intl.Collator("ja", {
+      sensitivity: "base",
+      numeric: true
+    });
+
+    return rows
+      .map(function (row, index) {
+        return {
+          index: index,
+          row: row,
+          nickname: normalize(row && row.nickname)
+        };
+      })
+      .sort(function (a, b) {
+        var aHasName = a.nickname.length > 0;
+        var bHasName = b.nickname.length > 0;
+
+        if (aHasName !== bHasName) {
+          return aHasName ? -1 : 1;
+        }
+
+        if (!aHasName && !bHasName) {
+          return a.index - b.index;
+        }
+
+        var compared = collator.compare(a.nickname, b.nickname);
+        if (compared !== 0) {
+          return dir === "asc" ? compared : -compared;
+        }
+
+        return a.index - b.index;
+      })
+      .map(function (item) {
+        return item.row;
+      });
+  }
+
   function computeSummary(data) {
     var payload = data && typeof data === "object" ? data : {};
     var collection = Array.isArray(payload.collection) ? payload.collection : [];
@@ -394,6 +437,7 @@
   return {
     toNumber: toNumber,
     filterValidReimbursements: filterValidReimbursements,
+    sortByNickname: sortByNickname,
     computeSummary: computeSummary,
     computeEqualRefundPlan: computeEqualRefundPlan,
     computeProrationPlan: computeProrationPlan,
