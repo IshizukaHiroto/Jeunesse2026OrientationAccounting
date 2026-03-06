@@ -1,6 +1,6 @@
 var SHEET_CANDIDATES = {
   collection: ["集金管理", "Sheet1"],
-  reimbursements: ["立替返金管理", "立替・返金管理", "立替・返金管理", "Sheet2"],
+  reimbursements: ["立替返金管理", "立替・返金管理", "Sheet2"],
   expenses: ["経費記録", "Sheet3"],
   settings: ["設定", "Sheet4"]
 };
@@ -22,7 +22,7 @@ function buildPayload_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var settingsSheet = getSheetByCandidates_(ss, SHEET_CANDIDATES.settings);
   var collectionSheet = getSheetByCandidates_(ss, SHEET_CANDIDATES.collection);
-  var reimbursementsSheet = getSheetByCandidates_(ss, SHEET_CANDIDATES.reimbursements);
+  var reimbursementsSheet = getReimbursementsSheet_(ss);
   var expensesSheet = getSheetByCandidates_(ss, SHEET_CANDIDATES.expenses);
 
   var config = readSettings_(settingsSheet);
@@ -340,12 +340,60 @@ function normalizeDateSerial_(serial) {
   return Utilities.formatDate(date, Session.getScriptTimeZone(), "yyyy-MM-dd");
 }
 
-function getSheetByCandidates_(ss, candidates) {
+function getReimbursementsSheet_(ss) {
+  var exactMatch = findSheetByCandidates_(ss, SHEET_CANDIDATES.reimbursements);
+  if (exactMatch) {
+    return exactMatch;
+  }
+
+  var fallbackMatches = findSheetsByNamePatterns_(ss, [
+    /^フォームの回答\s*\d+$/,
+    /^Form Responses \d+$/
+  ]);
+
+  if (fallbackMatches.length === 1) {
+    return fallbackMatches[0];
+  }
+
+  if (fallbackMatches.length > 1) {
+    throw new Error("Multiple reimbursement sheet candidates found. Rename the target sheet to 立替返金管理.");
+  }
+
+  throw new Error("Required sheet not found: " + SHEET_CANDIDATES.reimbursements.join(", "));
+}
+
+function findSheetByCandidates_(ss, candidates) {
   for (var i = 0; i < candidates.length; i += 1) {
     var sheet = ss.getSheetByName(candidates[i]);
     if (sheet) {
       return sheet;
     }
+  }
+
+  return null;
+}
+
+function findSheetsByNamePatterns_(ss, patterns) {
+  var sheets = ss.getSheets();
+  var matches = [];
+
+  for (var i = 0; i < sheets.length; i += 1) {
+    var name = sheets[i].getName();
+    for (var j = 0; j < patterns.length; j += 1) {
+      if (patterns[j].test(name)) {
+        matches.push(sheets[i]);
+        break;
+      }
+    }
+  }
+
+  return matches;
+}
+
+function getSheetByCandidates_(ss, candidates) {
+  var sheet = findSheetByCandidates_(ss, candidates);
+  if (sheet) {
+    return sheet;
   }
 
   throw new Error("Required sheet not found: " + candidates.join(", "));
