@@ -249,9 +249,9 @@
     } catch (error) {
       if (state.latestPayload) {
         render(state.latestPayload);
-        setSyncState("warn", "最新取得に失敗したため、前回成功データを表示中です。");
+        setSyncState("warn", "最新データを確認できなかったため、前回更新分を表示しています。");
       } else {
-        setSyncState("warn", "初回データ取得に失敗しました。GAS URLと公開設定を確認してください。");
+        setSyncState("warn", "データを読み込めませんでした。時間をおいて再読み込みしてください。");
         renderEmpty();
       }
       console.error(error);
@@ -304,10 +304,10 @@
     dom.metricBalance.textContent = formatYen(0);
     dom.metricPaidInfo.textContent = "済 0名 / 未 0名";
     dom.metricOutflowInfo.textContent = formatOutflowDetail(0, 0);
-    dom.metricBalanceInfo.textContent = "表示データがありません。";
-    dom.collectionList.innerHTML = '<p class="line-sub">表示データがありません。</p>';
-    dom.expensesList.innerHTML = '<p class="line-sub">表示データがありません。</p>';
-    dom.reimbursementsList.innerHTML = '<p class="line-sub">表示データがありません。</p>';
+    dom.metricBalanceInfo.textContent = "表示できるデータがありません。";
+    dom.collectionList.innerHTML = '<p class="line-sub">表示できるデータがありません。</p>';
+    dom.expensesList.innerHTML = '<p class="line-sub">表示できるデータがありません。</p>';
+    dom.reimbursementsList.innerHTML = '<p class="line-sub">表示できるデータがありません。</p>';
 
     state.chartSnapshot = {
       paidMembers: 0,
@@ -319,8 +319,8 @@
       })
     };
 
-    dom.settlementTitle.textContent = "データ待機中";
-    dom.settlementBody.textContent = "JSON取得後に精算方針を表示します。";
+    dom.settlementTitle.textContent = "読み込み待ちです。";
+    dom.settlementBody.textContent = "データを読み込むと精算方針を表示します。";
     dom.settlementFootnote.textContent = "";
 
     if (state.currentView === "summary") {
@@ -648,9 +648,8 @@
       state.charts.balance.destroy();
     }
 
-    var hasInnerData = composition.baseAmount > 0 && composition.outflowInBase + composition.balanceInBase > 0;
-
-    var innerData = hasInnerData ? [composition.outflowInBase, composition.balanceInBase] : [1];
+    var hasBaseAmount = composition.baseAmount > 0;
+    var innerData = hasBaseAmount ? [composition.outflowInBase, composition.balanceInBase] : [0, 0];
 
     var innerMeta = [
       {
@@ -667,7 +666,7 @@
       }
     ];
 
-    var innerColors = hasInnerData ? ["#c86134", "#78b86f"] : ["#dce6dd"];
+    var innerColors = hasBaseAmount ? ["#c86134", "#78b86f"] : ["rgba(0,0,0,0)", "rgba(0,0,0,0)"];
 
     var outerBase = composition.baseAmount > 0 ? composition.baseAmount : composition.shortageAmount > 0 ? composition.shortageAmount : 1;
     var outerShortageVisual = composition.shortageAmount > 0 ? Math.min(composition.shortageAmount, outerBase) : 0;
@@ -682,8 +681,8 @@
             label: "内訳",
             data: innerData,
             backgroundColor: innerColors,
-            borderColor: "#ffffff",
-            borderWidth: 2,
+            borderColor: hasBaseAmount ? "#ffffff" : "rgba(0,0,0,0)",
+            borderWidth: hasBaseAmount ? 2 : 0,
             weight: 1
           },
           {
@@ -766,29 +765,34 @@
     }
 
     if (!composition) {
-      dom.balanceBreakdown.innerHTML = '<li class="line-sub">データ待機中です。</li>';
+      dom.balanceBreakdown.innerHTML = '<li class="line-sub">表示できる内訳がありません。</li>';
       return;
     }
 
-    var items = [
-      {
+    var items = [];
+
+    if (composition.baseAmount > 0 && composition.outflowTotal > 0) {
+      items.push({
         label: "出費",
         color: "#c86134",
         amount: composition.outflowTotal,
         percent: composition.percentages.outflow,
         note: formatOutflowDetail(composition.expensesTotal, composition.plannedReimbursementsTotal)
-      },
-      {
+      });
+    }
+
+    if (composition.baseAmount > 0 && composition.balanceInBase > 0) {
+      items.push({
         label: "残高",
         color: "#78b86f",
         amount: composition.balanceInBase,
         percent: composition.percentages.balance
-      }
-    ];
+      });
+    }
 
     if (composition.shortageAmount > 0) {
       items.push({
-        label: "不足分（外側リング）",
+        label: "不足分",
         color: "#d2372c",
         amount: composition.shortageAmount,
         percent: composition.percentages.shortage
@@ -818,7 +822,7 @@
       .join("");
 
     if (items.length === 0) {
-      dom.balanceBreakdown.innerHTML = '<li class="line-sub">内訳データがありません。</li>';
+      dom.balanceBreakdown.innerHTML = '<li class="line-sub">表示できる内訳がありません。</li>';
     }
   }
 
@@ -839,31 +843,31 @@
       if (isLoading) {
         dom.loadingNotice.classList.remove("hidden");
         dom.loadingNotice.textContent = state.latestPayload
-          ? "最新データを取得中です。現在の表示は前回取得データです。"
-          : "初回データを読み込み中です。数秒お待ちください。";
+          ? "最新データを確認しています。現在の表示は前回更新分です。"
+          : "データを読み込んでいます。数秒お待ちください。";
       } else {
         dom.loadingNotice.classList.add("hidden");
         dom.loadingNotice.textContent = "";
       }
     }
 
-    if (isLoading && !state.latestPayload && dom.syncChip) {
+    if (isLoading && dom.syncChip) {
       dom.syncChip.className = "status-chip-ok shrink-0 whitespace-nowrap";
-      dom.syncChip.textContent = "同期中";
+      dom.syncChip.textContent = "更新中";
     }
   }
 
   function setSyncState(type, message) {
     if (type === "ok") {
       dom.syncChip.className = "status-chip-ok shrink-0 whitespace-nowrap";
-      dom.syncChip.textContent = "同期OK";
+      dom.syncChip.textContent = "更新済み";
       dom.syncBanner.className = "mt-4 hidden rounded-xl border px-4 py-3 text-sm";
       dom.syncBanner.textContent = "";
       return;
     }
 
     dom.syncChip.className = "status-chip-warn shrink-0 whitespace-nowrap";
-    dom.syncChip.textContent = "同期注意";
+    dom.syncChip.textContent = "要確認";
     dom.syncBanner.className = "mt-4 rounded-xl border border-clay-500/40 bg-clay-100 px-4 py-3 text-sm text-clay-700";
     dom.syncBanner.textContent = message;
   }

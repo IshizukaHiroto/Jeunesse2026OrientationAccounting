@@ -25,6 +25,39 @@
 - `refundCapPerFreshman`
 - `pollingIntervalSec` (60)
 
+`meta` 任意キー:
+- `seasonStart`
+- `seasonEnd`
+
+`collection[]` 公開キー:
+- `nickname`
+- `paymentStatus`
+- `confirmedDate`
+
+`expenses[]` 公開キー:
+- `id`
+- `date`
+- `category`
+- `description`
+- `amount`
+
+`reimbursements[]` 公開キー:
+- `id`
+- `nickname`
+- `description`
+- `paymentAmount`
+- `reimbursementAmount`
+- `refundStatus`
+
+`summary` 公開キー:
+- `paidMembers`
+- `unpaidMembers`
+- `collectionTotal`
+- `expensesTotal`
+- `plannedReimbursementsTotal`
+- `availableAfterExpenses`
+- `currentBalance`
+
 ### 返却例
 ```json
 {
@@ -39,9 +72,12 @@
   "expenses": [],
   "reimbursements": [],
   "summary": {
+    "paidMembers": 0,
+    "unpaidMembers": 0,
     "collectionTotal": 0,
     "expensesTotal": 0,
     "plannedReimbursementsTotal": 0,
+    "availableAfterExpenses": 0,
     "currentBalance": 0
   }
 }
@@ -49,8 +85,17 @@
 
 ## 4. フィルタ規約
 1. `reimbursements` は `承認済` かつ `有効` のみ。
-2. 未承認、無効、レシートURL、本名、連絡先は含めない。
-3. 誤申請は無効化で保持し、JSONでは非表示にする。
+2. 誤申請は無効化で保持し、JSONでは非表示にする。
+3. 公開JSONは whitelist 方式で返す。UIで未使用でも、公開不要な項目は含めない。
+4. 以下は公開JSONに含めない。
+   - `receiptUrl` などのレシート関連項目
+   - `approvalStatus` / `invalidFlag` / `invalidReason`
+   - `note`
+   - `payer`
+   - `collectedAmount`
+   - `appliedDate`
+   - `freshmanCount`
+   - 本名、連絡先
 
 ## 4-1. 列名互換
 `reimbursements[].nickname` は以下の列名候補を優先順に参照して生成する。
@@ -61,8 +106,6 @@
 4. `申請者名`
 5. `申請者名(上記に名前がない場合)`
 6. `申請者名（上記に名前がない場合）`
-
-`reimbursements[].appliedDate` は、日付セル・日付文字列・シリアル値（例: `46086`）のいずれでも `yyyy-MM-dd` に正規化して返す。
 
 ## 5. エラー時仕様
 `doGet` で例外が起きた場合は以下形式で返す。
@@ -77,4 +120,5 @@
 ## 6. テスト確認
 1. ブラウザでGAS URLを開き、JSONが表示されること。
 2. 必須キー欠落がないこと。
-3. 個人情報やレシートURLが含まれないこと。
+3. `collection[]` / `expenses[]` / `reimbursements[]` / `summary` に公開対象外キーが含まれないこと。
+4. 個人情報やレシートURLが含まれないこと。

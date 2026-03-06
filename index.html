@@ -14,6 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=M+PLUS+1p:wght@500;700&display=swap"
       rel="stylesheet"
     />
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" sizes="any" />
     <link rel="stylesheet" href="./assets/styles.css" />
   </head>
   <body>
@@ -40,7 +41,7 @@
             <div class="min-w-0">
               <p class="font-display text-xs uppercase tracking-[0.14em] text-white/80">Jeunesse 2026</p>
               <p class="mt-2 font-display text-2xl font-bold leading-tight sm:text-3xl">新歓会計ダッシュボード</p>
-              <p class="mt-2 text-sm text-white/90">メニューを切り替えて集金と出費を確認できます。</p>
+              <p class="mt-2 text-sm text-white/90">メニューを切り替えて集金と出費の状況を確認できます。</p>
             </div>
             <button
               id="manual-refresh-btn"
@@ -53,7 +54,7 @@
           </div>
 
           <div class="relative mt-4 flex items-center gap-2 overflow-hidden text-xs sm:text-sm">
-            <span id="sync-chip" class="status-chip-ok shrink-0 whitespace-nowrap">同期待機</span>
+            <span id="sync-chip" class="status-chip-ok shrink-0 whitespace-nowrap">準備中</span>
             <span class="min-w-0 truncate rounded-full bg-white/20 px-3 py-1 text-white/90">
               最終反映: <span id="updated-at">--</span>
             </span>
@@ -78,7 +79,7 @@
             <article class="metric-card">
               <p class="metric-label">現在残高</p>
               <p id="metric-balance" class="metric-value">¥0</p>
-              <p id="metric-balance-info" class="mt-1 text-xs text-court-700">精算メモを確認してください</p>
+              <p id="metric-balance-info" class="mt-1 text-xs text-court-700">精算状況を表示します。</p>
             </article>
           </section>
 
@@ -97,7 +98,7 @@
                 </section>
                 <section class="rounded-xl border border-court-100 bg-court-50/60 p-3">
                   <h3 class="text-sm font-semibold text-court-900">残高内訳</h3>
-                  <p class="mt-1 text-xs text-court-700">集金総額を100%として表示（出費は経費 + 立替返金予定 / 不足分は外側赤リング）</p>
+                  <p class="mt-1 text-xs text-court-700">集金総額をもとに、出費・残高・不足分を表示します。</p>
                   <div class="chart-stage mt-3">
                     <canvas id="balance-chart" aria-label="残高内訳の円グラフ" role="img"></canvas>
                     <p id="balance-chart-empty" class="chart-empty">データを読み込み中です。</p>
@@ -112,7 +113,7 @@
             <div class="px-4 pb-4 pt-4">
               <h2 class="font-display text-lg font-semibold text-court-900">精算ガイド</h2>
               <p id="settlement-title" class="mt-3 text-sm font-bold text-court-900">データ待機中</p>
-              <p id="settlement-body" class="mt-2 text-sm leading-relaxed text-court-800">JSON取得後に精算方針を表示します。</p>
+              <p id="settlement-body" class="mt-2 text-sm leading-relaxed text-court-800">データを読み込むと精算方針を表示します。</p>
               <p id="settlement-footnote" class="mt-3 text-xs text-court-700"></p>
             </div>
           </article>
@@ -182,7 +183,7 @@
           <article class="section-shell">
             <div class="section-header">
               <div>
-                <h2 class="font-display text-lg font-semibold text-court-900">立替一覧（承認済・有効のみ）</h2>
+                <h2 class="font-display text-lg font-semibold text-court-900">立替一覧</h2>
                 <p class="mt-1 text-xs text-court-700">上位5件から表示。名前で昇順/降順の切替ができます。</p>
                 <p class="mt-1 text-xs text-court-700">
                   返金上限は新入生1人あたり <span id="refund-cap-note">700円</span> です。

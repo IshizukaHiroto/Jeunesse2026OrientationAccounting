@@ -26,7 +26,7 @@ function buildPayload_() {
   var expensesSheet = getSheetByCandidates_(ss, SHEET_CANDIDATES.expenses);
 
   var config = readSettings_(settingsSheet);
-  var collection = readCollection_(collectionSheet, config.collectionAmountPerMember);
+  var collection = readCollection_(collectionSheet);
   var reimbursementsAll = readReimbursements_(reimbursementsSheet, config.refundCapPerFreshman);
   var reimbursements = reimbursementsAll.filter(function (row) {
     return row.approvalStatus === "承認済" && row.invalidFlag !== "無効";
@@ -44,10 +44,10 @@ function buildPayload_() {
       seasonStart: config.seasonStart,
       seasonEnd: config.seasonEnd
     },
-    collection: collection,
-    expenses: expenses,
-    reimbursements: reimbursements,
-    summary: summary
+    collection: collection.map(toPublicCollectionRow_),
+    expenses: expenses.map(toPublicExpenseRow_),
+    reimbursements: reimbursements.map(toPublicReimbursementRow_),
+    summary: toPublicSummary_(summary)
   };
 }
 
@@ -72,7 +72,7 @@ function readSettings_(sheet) {
   };
 }
 
-function readCollection_(sheet, collectionAmountPerMember) {
+function readCollection_(sheet) {
   var rows = toRows_(sheet);
   return rows
     .filter(function (row) {
@@ -83,9 +83,7 @@ function readCollection_(sheet, collectionAmountPerMember) {
       return {
         nickname: text_(row["ニックネーム"]),
         paymentStatus: paymentStatus,
-        collectedAmount: paymentStatus === "済" ? collectionAmountPerMember : 0,
-        confirmedDate: normalizeDate_(row["確認日"]),
-        note: text_(row["備考"])
+        confirmedDate: normalizeDate_(row["確認日"])
       };
     });
 }
@@ -94,7 +92,6 @@ function readReimbursements_(sheet, refundCapPerFreshman) {
   var rows = toRows_(sheet);
   return rows
     .map(function (row, index) {
-      var appliedDate = getByHeaderCandidates_(row, ["申請日", "日付"]);
       var nickname = getTextByHeaderCandidates_(row, [
         "立替者ニックネーム",
         "立替者(ニックネーム)",
@@ -112,16 +109,13 @@ function readReimbursements_(sheet, refundCapPerFreshman) {
 
       return {
         id: index + 2,
-        appliedDate: normalizeDate_(appliedDate),
         nickname: nickname,
         description: description,
         paymentAmount: paymentAmount,
-        freshmanCount: freshmanCount,
         reimbursementAmount: Math.min(normalizedReimbursementAmount, computedCapAmount),
         approvalStatus: getTextByHeaderCandidates_(row, ["承認状況"]) || "未承認",
         refundStatus: getTextByHeaderCandidates_(row, ["返金状況"]) || "未返金",
-        invalidFlag: getTextByHeaderCandidates_(row, ["無効フラグ"]) || "有効",
-        invalidReason: getTextByHeaderCandidates_(row, ["無効理由"])
+        invalidFlag: getTextByHeaderCandidates_(row, ["無効フラグ"]) || "有効"
       };
     })
     .filter(function (row) {
@@ -138,9 +132,7 @@ function readExpenses_(sheet) {
         date: normalizeDate_(row["日付"]),
         description: text_(row["内容"]),
         amount: toYen_(row["金額"]),
-        payer: text_(row["支払い者"]),
-        category: text_(row["カテゴリ"]),
-        note: text_(row["備考"])
+        category: text_(row["カテゴリ"])
       };
     })
     .filter(function (row) {
@@ -191,6 +183,47 @@ function computeSummary_(collection, expenses, reimbursements, collectionAmountP
     equalRefundRemainder: equalRefundRemainder,
     prorationRate: prorationRate,
     balanceState: currentBalance > 0 ? "plus" : currentBalance < 0 ? "minus" : "zero"
+  };
+}
+
+function toPublicCollectionRow_(row) {
+  return {
+    nickname: row.nickname,
+    paymentStatus: row.paymentStatus,
+    confirmedDate: row.confirmedDate
+  };
+}
+
+function toPublicExpenseRow_(row) {
+  return {
+    id: row.id,
+    date: row.date,
+    category: row.category,
+    description: row.description,
+    amount: row.amount
+  };
+}
+
+function toPublicReimbursementRow_(row) {
+  return {
+    id: row.id,
+    nickname: row.nickname,
+    description: row.description,
+    paymentAmount: row.paymentAmount,
+    reimbursementAmount: row.reimbursementAmount,
+    refundStatus: row.refundStatus
+  };
+}
+
+function toPublicSummary_(summary) {
+  return {
+    paidMembers: summary.paidMembers,
+    unpaidMembers: summary.unpaidMembers,
+    collectionTotal: summary.collectionTotal,
+    expensesTotal: summary.expensesTotal,
+    plannedReimbursementsTotal: summary.plannedReimbursementsTotal,
+    availableAfterExpenses: summary.availableAfterExpenses,
+    currentBalance: summary.currentBalance
   };
 }
 

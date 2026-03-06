@@ -398,6 +398,34 @@
 
   function validatePayloadShape(payload) {
     var errors = [];
+    var allowedMetaKeys = [
+      "generatedAt",
+      "seasonYear",
+      "collectionAmountPerMember",
+      "refundCapPerFreshman",
+      "pollingIntervalSec",
+      "seasonStart",
+      "seasonEnd"
+    ];
+    var allowedCollectionKeys = ["nickname", "paymentStatus", "confirmedDate"];
+    var allowedExpenseKeys = ["id", "date", "category", "description", "amount"];
+    var allowedReimbursementKeys = [
+      "id",
+      "nickname",
+      "description",
+      "paymentAmount",
+      "reimbursementAmount",
+      "refundStatus"
+    ];
+    var allowedSummaryKeys = [
+      "paidMembers",
+      "unpaidMembers",
+      "collectionTotal",
+      "expensesTotal",
+      "plannedReimbursementsTotal",
+      "availableAfterExpenses",
+      "currentBalance"
+    ];
 
     if (!payload || typeof payload !== "object") {
       return ["payload must be an object"];
@@ -417,12 +445,44 @@
       }
     });
 
+    if (meta && typeof meta === "object") {
+      Object.keys(meta).forEach(function (key) {
+        if (allowedMetaKeys.indexOf(key) === -1) {
+          errors.push("meta includes forbidden key: " + key);
+        }
+      });
+    }
+
     if (!Array.isArray(payload.collection)) {
       errors.push("collection must be an array");
+    } else {
+      payload.collection.forEach(function (item, index) {
+        if (!item || typeof item !== "object") {
+          return;
+        }
+
+        Object.keys(item).forEach(function (key) {
+          if (allowedCollectionKeys.indexOf(key) === -1) {
+            errors.push("collection[" + index + "] includes forbidden key: " + key);
+          }
+        });
+      });
     }
 
     if (!Array.isArray(payload.expenses)) {
       errors.push("expenses must be an array");
+    } else {
+      payload.expenses.forEach(function (item, index) {
+        if (!item || typeof item !== "object") {
+          return;
+        }
+
+        Object.keys(item).forEach(function (key) {
+          if (allowedExpenseKeys.indexOf(key) === -1) {
+            errors.push("expenses[" + index + "] includes forbidden key: " + key);
+          }
+        });
+      });
     }
 
     if (!Array.isArray(payload.reimbursements)) {
@@ -435,6 +495,28 @@
           if ("receiptUrl" in item || "receiptURL" in item || "receipt" in item) {
             errors.push("reimbursements[" + index + "] includes forbidden receipt field");
           }
+
+          Object.keys(item).forEach(function (key) {
+            if (allowedReimbursementKeys.indexOf(key) === -1) {
+              errors.push("reimbursements[" + index + "] includes forbidden key: " + key);
+            }
+          });
+        }
+      });
+    }
+
+    if (!payload.summary || typeof payload.summary !== "object" || Array.isArray(payload.summary)) {
+      errors.push("summary must be an object");
+    } else {
+      allowedSummaryKeys.forEach(function (key) {
+        if (!(key in payload.summary)) {
+          errors.push("missing summary key: " + key);
+        }
+      });
+
+      Object.keys(payload.summary).forEach(function (key) {
+        if (allowedSummaryKeys.indexOf(key) === -1) {
+          errors.push("summary includes forbidden key: " + key);
         }
       });
     }
