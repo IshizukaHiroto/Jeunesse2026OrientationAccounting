@@ -570,33 +570,23 @@
 
     if (balance > 0) {
       dom.metricBalance.classList.add("text-court-700");
-      dom.metricBalanceInfo.textContent =
-        "1人あたりの返金目安: " +
-        formatYen(summary.equalRefundBase) +
-        "（余り " +
-        formatYen(summary.equalRefundRemainder) +
-        " は最後に調整）";
+      dom.metricBalanceInfo.textContent = "余剰あり。精算ガイドを確認してください。";
 
       dom.settlementTitle.textContent = "お金が余っています。みんなに同じ金額を返します。";
       dom.settlementBody.textContent =
         "集金した人全員に同じ金額を返し、余りは最後の1人に足して合計をぴったり合わせます。";
-      dom.settlementFootnote.textContent =
-        "いま余っているお金 " + formatYen(balance) + " / 基本の返金額 " + formatYen(summary.equalRefundBase);
+      dom.settlementFootnote.textContent = "";
       return;
     }
 
     if (balance < 0) {
       dom.metricBalance.classList.add("text-clay-700");
-      dom.metricBalanceInfo.textContent = "返せる割合: " + formatRate(summary.prorationRate) + "（端数は最後に調整）";
+      dom.metricBalanceInfo.textContent = "不足あり。精算ガイドを確認してください。";
 
       dom.settlementTitle.textContent = "お金が足りません。返金額を同じ割合で減らします。";
       dom.settlementBody.textContent =
         "追加で集金はしません。もとの返金予定を同じ割合で減らして、返せる合計金額に合わせます。";
-      dom.settlementFootnote.textContent =
-        "いま返せるお金 " +
-        formatYen(summary.availableAfterExpenses) +
-        " / もとの返金予定合計 " +
-        formatYen(summary.plannedReimbursementsTotal);
+      dom.settlementFootnote.textContent = "";
       return;
     }
 
@@ -605,7 +595,7 @@
 
     dom.settlementTitle.textContent = "残高は0円です。";
     dom.settlementBody.textContent = "この時点で追加精算は不要です。返金ステータスの更新だけ実施してください。";
-    dom.settlementFootnote.textContent = "計算上の差額はありません。";
+    dom.settlementFootnote.textContent = "";
   }
 
   function renderCollectionChart(paidMembers, unpaidMembers) {
@@ -715,7 +705,32 @@
             display: false
           },
           tooltip: {
+            filter: function (context) {
+              if (context.datasetIndex === 0) {
+                var inner = innerMeta[context.dataIndex];
+                return Boolean(inner && inner.amount > 0);
+              }
+
+              return context.datasetIndex === 1 && context.dataIndex === 0 && composition.shortageAmount > 0;
+            },
             callbacks: {
+              title: function (items) {
+                if (!items || items.length === 0) {
+                  return "";
+                }
+
+                var item = items[0];
+                if (item.datasetIndex === 0) {
+                  var inner = innerMeta[item.dataIndex];
+                  return inner ? inner.label : "";
+                }
+
+                if (item.datasetIndex === 1 && item.dataIndex === 0) {
+                  return "不足分";
+                }
+
+                return "";
+              },
               label: function (context) {
                 if (context.datasetIndex === 0) {
                   var meta = innerMeta[context.dataIndex];
@@ -725,15 +740,15 @@
                   var displayAmount = meta.displayAmount !== undefined ? meta.displayAmount : meta.amount;
                   if (meta.detail) {
                     return [
-                      meta.label + ": " + formatYen(displayAmount) + " (" + formatPercent(meta.percent) + ")",
+                      formatYen(displayAmount) + " (" + formatPercent(meta.percent) + ")",
                       meta.detail
                     ];
                   }
-                  return meta.label + ": " + formatYen(displayAmount) + " (" + formatPercent(meta.percent) + ")";
+                  return formatYen(displayAmount) + " (" + formatPercent(meta.percent) + ")";
                 }
 
                 if (context.datasetIndex === 1 && context.dataIndex === 0 && composition.shortageAmount > 0) {
-                  return "不足分: " + formatYen(composition.shortageAmount) + " (" + formatPercent(composition.percentages.shortage) + ")";
+                  return formatYen(composition.shortageAmount) + " (" + formatPercent(composition.percentages.shortage) + ")";
                 }
 
                 return "";
@@ -950,14 +965,6 @@
       hour: "2-digit",
       minute: "2-digit"
     }).format(date);
-  }
-
-  function formatRate(value) {
-    if (value === null || value === undefined || Number.isNaN(Number(value))) {
-      return "--";
-    }
-
-    return (Number(value) * 100).toFixed(1) + "%";
   }
 
   function formatPercent(value) {
