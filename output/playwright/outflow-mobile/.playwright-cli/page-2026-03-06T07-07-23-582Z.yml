@@ -1,0 +1,73 @@
+- generic [active] [ref=e1]:
+  - main [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - paragraph [ref=e9]: Jeunesse 2026
+          - paragraph [ref=e10]: 新歓会計ダッシュボード
+          - paragraph [ref=e11]: メニューを切り替えて集金と出費を確認できます。
+        - button "今すぐ更新" [ref=e12] [cursor=pointer]:
+          - generic [ref=e13]: 今すぐ更新
+      - generic [ref=e14]:
+        - generic [ref=e15]: 同期OK
+        - generic [ref=e16]: "最終反映: 2026/03/06 16:00"
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - article [ref=e19]:
+          - paragraph [ref=e20]: 集金総額
+          - paragraph [ref=e21]: ¥100,000
+          - paragraph [ref=e22]: 済 25名 / 未 0名
+        - article [ref=e23]:
+          - paragraph [ref=e24]: 出費
+          - paragraph [ref=e25]: ¥110,000
+          - paragraph [ref=e26]: 経費 ¥60,000 / 立替返金予定 ¥50,000
+        - article [ref=e27]:
+          - paragraph [ref=e28]: 現在残高
+          - paragraph [ref=e29]: ¥-10,000
+          - paragraph [ref=e30]: "返せる割合: 80.0%（端数は最後に調整）"
+      - article [ref=e31]:
+        - generic [ref=e32]:
+          - heading "集金と残高の円グラフ" [level=2] [ref=e33]
+          - paragraph [ref=e34]: 集金状況と、集金総額100%に対するお金の内訳を表示します。
+          - generic [ref=e35]:
+            - generic [ref=e36]:
+              - heading "集金進捗" [level=3] [ref=e37]
+              - paragraph [ref=e38]: 済 / 未 の割合
+              - img "集金状況の円グラフ" [ref=e40]
+            - generic [ref=e41]:
+              - heading "残高内訳" [level=3] [ref=e42]
+              - paragraph [ref=e43]: 集金総額を100%として表示（出費は経費 + 立替返金予定 / 不足分は外側赤リング）
+              - img "残高内訳の円グラフ" [ref=e45]
+              - list [ref=e46]:
+                - listitem [ref=e47]:
+                  - generic [ref=e48]:
+                    - generic [ref=e50]:
+                      - generic [ref=e51]: 出費
+                      - text: 経費 ¥60,000 / 立替返金予定 ¥50,000
+                    - generic [ref=e52]: ¥110,000 / 100%
+                - listitem [ref=e53]:
+                  - generic [ref=e54]:
+                    - generic [ref=e57]: 残高
+                    - generic [ref=e58]: ¥0 / 0%
+                - listitem [ref=e59]:
+                  - generic [ref=e60]:
+                    - generic [ref=e63]: 不足分（外側リング）
+                    - generic [ref=e64]: ¥10,000 / 10%
+      - article [ref=e65]:
+        - generic [ref=e66]:
+          - heading "精算ガイド" [level=2] [ref=e67]
+          - paragraph [ref=e68]: お金が足りません。返金額を同じ割合で減らします。
+          - paragraph [ref=e69]: 追加で集金はしません。もとの返金予定を同じ割合で減らして、返せる合計金額に合わせます。
+          - paragraph [ref=e70]: いま返せるお金 ¥40,000 / もとの返金予定合計 ¥50,000
+      - article [ref=e71]:
+        - generic [ref=e72]:
+          - heading "精算ルール（2026）" [level=2] [ref=e73]
+          - generic [ref=e74]:
+            - paragraph [ref=e75]: 1. 返金の予定額は、実際に払った金額と上限額（新入生1人あたり 700円）を比べて、小さい方を使います。
+            - paragraph [ref=e76]: 2. お金が余っているときは、集金した人に同じ金額ずつ返します。
+            - paragraph [ref=e77]: 3. お金が不足しているときは、予定していた返金額を同じ割合で減らします。
+            - paragraph [ref=e78]: 4. 1円単位の差は最後に調整して、全体の合計を一致させます。
+  - navigation "モバイルメニュー" [ref=e79]:
+    - button "サマリー" [ref=e80] [cursor=pointer]
+    - button "集金" [ref=e81] [cursor=pointer]
+    - button "出費" [ref=e82] [cursor=pointer]
