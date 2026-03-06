@@ -1,0 +1,60 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - paragraph [ref=e8]: Jeunesse 2026
+        - heading "新歓会計ダッシュボード" [level=1] [ref=e9]
+        - paragraph [ref=e10]: 集金・経費・立替返金を1ページで確認できます。
+      - button "更新中" [disabled] [ref=e11]:
+        - generic [ref=e12]: 更新中
+    - generic [ref=e17]:
+      - generic [ref=e18]: 同期待機
+      - generic [ref=e19]: "最終反映: --"
+  - generic [ref=e20]:
+    - article [ref=e21]:
+      - paragraph [ref=e22]: 集金総額
+      - paragraph [ref=e23]: ¥0
+      - paragraph [ref=e24]: 済 0名 / 未 0名
+    - article [ref=e25]:
+      - paragraph [ref=e26]: 支出 + 返金予定
+      - paragraph [ref=e27]: ¥0
+      - paragraph [ref=e28]: 経費 ¥0 / 返金予定 ¥0
+    - article [ref=e29]:
+      - paragraph [ref=e30]: 現在残高
+      - paragraph [ref=e31]: ¥0
+      - paragraph [ref=e32]: 精算メモを確認してください
+  - generic [ref=e33]:
+    - article [ref=e34]:
+      - heading "集金と残高の円グラフ" [level=2] [ref=e35]
+      - paragraph [ref=e36]: 集金状況と、集金総額100%に対するお金の内訳を表示します。
+      - generic [ref=e37]:
+        - generic [ref=e38]:
+          - heading "集金進捗" [level=3] [ref=e39]
+          - paragraph [ref=e40]: 済 / 未 の割合
+          - img "集金状況の円グラフ" [ref=e42]
+        - generic [ref=e43]:
+          - heading "残高内訳" [level=3] [ref=e44]
+          - paragraph [ref=e45]: 集金総額を100%として表示（不足分は外側赤リング）
+          - img "残高内訳の円グラフ" [ref=e47]
+          - list
+    - article [ref=e48]:
+      - heading "精算ガイド" [level=2] [ref=e49]
+      - paragraph [ref=e50]: データ待機中
+      - paragraph [ref=e51]: JSON取得後に精算方針を表示します。
+      - paragraph
+  - group [ref=e52]:
+    - generic "集金状況（上位5件）" [ref=e53] [cursor=pointer]:
+      - generic [ref=e54]: 集金状況（上位5件）
+      - generic [ref=e56]: 閉じる ▴
+  - group [ref=e58]:
+    - generic "経費明細（上位5件）" [ref=e59] [cursor=pointer]:
+      - generic [ref=e60]: 経費明細（上位5件）
+      - generic [ref=e62]: 開く ▾
+  - group [ref=e63]:
+    - generic "立替一覧（承認済・有効のみ / 上位5件）" [ref=e64] [cursor=pointer]:
+      - generic [ref=e65]: 立替一覧（承認済・有効のみ / 上位5件）
+      - generic [ref=e67]: 開く ▾
+  - group [ref=e68]:
+    - generic "精算ルール（2026）" [ref=e69] [cursor=pointer]:
+      - generic [ref=e70]: 精算ルール（2026）
+      - generic [ref=e72]: 開く ▾
