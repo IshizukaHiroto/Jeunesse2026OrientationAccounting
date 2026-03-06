@@ -6,7 +6,7 @@
     <title>Jeunesse 2026 新歓会計ダッシュボード</title>
     <meta
       name="description"
-      content="Jeunesse 2026 新歓会計の集金・経費・立替返金を確認できるダッシュボード"
+      content="Jeunesse 2026 新歓会計の集金と出費を確認できるダッシュボード"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -27,8 +27,7 @@
         <nav class="sidebar-nav" aria-label="画面切替">
           <button type="button" class="nav-item is-active" data-view="summary" aria-current="page">サマリー</button>
           <button type="button" class="nav-item" data-view="collection">集金</button>
-          <button type="button" class="nav-item" data-view="expenses">経費</button>
-          <button type="button" class="nav-item" data-view="reimbursements">立替</button>
+          <button type="button" class="nav-item" data-view="outflow">出費</button>
         </nav>
       </aside>
 
@@ -41,7 +40,7 @@
             <div class="min-w-0">
               <p class="font-display text-xs uppercase tracking-[0.14em] text-white/80">Jeunesse 2026</p>
               <p class="mt-2 font-display text-2xl font-bold leading-tight sm:text-3xl">新歓会計ダッシュボード</p>
-              <p class="mt-2 text-sm text-white/90">左メニューで画面を切り替えて確認できます。</p>
+              <p class="mt-2 text-sm text-white/90">メニューを切り替えて集金と出費を確認できます。</p>
             </div>
             <button
               id="manual-refresh-btn"
@@ -72,9 +71,9 @@
               <p id="metric-paid-info" class="mt-1 text-xs text-court-700">済 0名 / 未 0名</p>
             </article>
             <article class="metric-card">
-              <p class="metric-label">支出 + 返金予定</p>
+              <p class="metric-label">出費</p>
               <p id="metric-outflow" class="metric-value">¥0</p>
-              <p id="metric-outflow-info" class="mt-1 text-xs text-court-700">経費 ¥0 / 返金予定 ¥0</p>
+              <p id="metric-outflow-info" class="mt-1 text-xs text-court-700">経費 ¥0 / 立替返金予定 ¥0</p>
             </article>
             <article class="metric-card">
               <p class="metric-label">現在残高</p>
@@ -98,7 +97,7 @@
                 </section>
                 <section class="rounded-xl border border-court-100 bg-court-50/60 p-3">
                   <h3 class="text-sm font-semibold text-court-900">残高内訳</h3>
-                  <p class="mt-1 text-xs text-court-700">集金総額を100%として表示（不足分は外側赤リング）</p>
+                  <p class="mt-1 text-xs text-court-700">集金総額を100%として表示（出費は経費 + 立替返金予定 / 不足分は外側赤リング）</p>
                   <div class="chart-stage mt-3">
                     <canvas id="balance-chart" aria-label="残高内訳の円グラフ" role="img"></canvas>
                     <p id="balance-chart-empty" class="chart-empty">データを読み込み中です。</p>
@@ -147,12 +146,26 @@
             </div>
             <div class="px-4 pb-4 pt-3">
               <div id="collection-list" class="space-y-2"></div>
-              <button id="collection-more-btn" class="ghost-btn mt-3 hidden">もっと見る</button>
+              <button id="collection-more-btn" class="ghost-btn list-more-btn mt-3 hidden">もっと見る</button>
             </div>
           </article>
         </section>
 
-        <section class="view-panel hidden" data-view-panel="expenses" aria-hidden="true">
+        <section class="view-panel hidden" data-view-panel="outflow" aria-hidden="true">
+          <article class="section-shell">
+            <div class="section-header">
+              <div>
+                <h2 class="font-display text-lg font-semibold text-court-900">出費一覧</h2>
+                <p class="mt-1 text-xs text-court-700">経費と立替返金予定をまとめて確認できます。</p>
+              </div>
+            </div>
+            <div class="px-4 pb-4 pt-3">
+              <p class="text-sm leading-relaxed text-court-900">
+                サマリーでは経費と立替返金予定を合算して出費として表示し、詳細は下の2一覧で確認します。
+              </p>
+            </div>
+          </article>
+
           <article class="section-shell">
             <div class="section-header">
               <div>
@@ -162,12 +175,10 @@
             </div>
             <div class="px-4 pb-4 pt-3">
               <div id="expenses-list" class="space-y-2"></div>
-              <button id="expenses-more-btn" class="ghost-btn mt-3 hidden">もっと見る</button>
+              <button id="expenses-more-btn" class="ghost-btn list-more-btn mt-3 hidden">もっと見る</button>
             </div>
           </article>
-        </section>
 
-        <section class="view-panel hidden" data-view-panel="reimbursements" aria-hidden="true">
           <article class="section-shell">
             <div class="section-header">
               <div>
@@ -184,7 +195,7 @@
             </div>
             <div class="px-4 pb-4 pt-3">
               <div id="reimbursements-list" class="space-y-2"></div>
-              <button id="reimbursements-more-btn" class="ghost-btn mt-3 hidden">もっと見る</button>
+              <button id="reimbursements-more-btn" class="ghost-btn list-more-btn mt-3 hidden">もっと見る</button>
             </div>
           </article>
         </section>
@@ -194,8 +205,7 @@
     <nav class="mobile-tabbar" aria-label="モバイルメニュー">
       <button type="button" class="mobile-tab-item is-active" data-view="summary" aria-current="page">サマリー</button>
       <button type="button" class="mobile-tab-item" data-view="collection">集金</button>
-      <button type="button" class="mobile-tab-item" data-view="expenses">経費</button>
-      <button type="button" class="mobile-tab-item" data-view="reimbursements">立替</button>
+      <button type="button" class="mobile-tab-item" data-view="outflow">出費</button>
     </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>

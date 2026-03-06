@@ -50,15 +50,15 @@
   }
 
   .app-main {
-    @apply px-4 pb-24 pt-4 sm:px-6 lg:px-8 lg:pb-10;
+    @apply px-4 pb-32 pt-4 sm:px-6 sm:pb-24 lg:px-8 lg:pb-10;
   }
 
   .mobile-tabbar {
-    @apply fixed bottom-0 left-0 right-0 z-40 grid grid-cols-4 gap-1 border-t border-court-100 bg-white px-2 py-2 lg:hidden;
+    @apply fixed bottom-0 left-0 right-0 z-40 grid grid-cols-3 gap-2 border-t border-court-100 bg-white px-3 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] lg:hidden;
   }
 
   .mobile-tab-item {
-    @apply inline-flex items-center justify-center rounded-lg border border-court-100 bg-court-50 px-2 py-2 text-xs font-semibold text-court-700;
+    @apply inline-flex min-h-[3.5rem] items-center justify-center rounded-xl border border-court-100 bg-court-50 px-3 py-3 text-sm font-semibold leading-tight text-court-700;
   }
 
   .mobile-tab-item.is-active {
@@ -118,7 +118,7 @@
   }
 
   .sort-btn {
-    @apply rounded-md border border-transparent px-3 py-1 text-xs font-semibold text-court-700;
+    @apply rounded-md border border-transparent px-4 py-2 text-sm font-semibold text-court-700 sm:px-3 sm:py-1 sm:text-xs;
   }
 
   .sort-btn[aria-pressed="true"],
@@ -155,10 +155,14 @@
   }
 
   .ghost-btn {
-    @apply inline-flex items-center rounded-lg border border-court-300 px-3 py-2 text-sm font-semibold text-court-900 hover:bg-court-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-court-300;
+    @apply inline-flex min-h-12 items-center rounded-lg border border-court-300 px-4 py-3 text-base font-semibold text-court-900 hover:bg-court-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-court-300 sm:min-h-10 sm:px-3 sm:py-2 sm:text-sm;
+  }
+
+  .list-more-btn {
+    @apply w-full justify-center sm:w-auto;
   }
 
   .refresh-btn {
-    @apply min-h-10 min-w-[108px] justify-center whitespace-nowrap px-3;
+    @apply min-h-12 min-w-[120px] justify-center whitespace-nowrap px-4 sm:min-h-10 sm:min-w-[108px] sm:px-3;
   }
 }

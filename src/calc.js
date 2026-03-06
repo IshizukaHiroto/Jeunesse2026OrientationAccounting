@@ -359,12 +359,15 @@
     var expensesInBase = Math.min(expensesTotal, baseAmount);
     var refundBudget = Math.max(baseAmount - expensesInBase, 0);
     var reimburseInBase = Math.min(plannedReimbursementsTotal, refundBudget);
-    var balanceInBase = Math.max(refundBudget - reimburseInBase, 0);
-    var shortageAmount = Math.max(plannedReimbursementsTotal - refundBudget, 0);
+    var outflowTotal = expensesTotal + plannedReimbursementsTotal;
+    var outflowInBase = Math.min(outflowTotal, baseAmount);
+    var balanceInBase = Math.max(baseAmount - outflowInBase, 0);
+    var shortageAmount = Math.max(outflowTotal - baseAmount, 0);
 
     var percentages = {
       expenses: 0,
       reimbursements: 0,
+      outflow: 0,
       balance: 0,
       shortage: 0
     };
@@ -372,6 +375,7 @@
     if (baseAmount > 0) {
       percentages.expenses = (expensesInBase / baseAmount) * 100;
       percentages.reimbursements = (reimburseInBase / baseAmount) * 100;
+      percentages.outflow = (outflowInBase / baseAmount) * 100;
       percentages.balance = (balanceInBase / baseAmount) * 100;
       percentages.shortage = (shortageAmount / baseAmount) * 100;
     } else if (shortageAmount > 0) {
@@ -380,8 +384,12 @@
 
     return {
       baseAmount: baseAmount,
+      expensesTotal: expensesTotal,
+      plannedReimbursementsTotal: plannedReimbursementsTotal,
       expensesInBase: expensesInBase,
       reimburseInBase: reimburseInBase,
+      outflowTotal: outflowTotal,
+      outflowInBase: outflowInBase,
       balanceInBase: balanceInBase,
       shortageAmount: shortageAmount,
       percentages: percentages

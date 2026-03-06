@@ -3,7 +3,7 @@
 
   var LIST_STEP = 5;
   var DEFAULT_REFUND_CAP = 700;
-  var VIEW_IDS = ["summary", "collection", "expenses", "reimbursements"];
+  var VIEW_IDS = ["summary", "collection", "outflow"];
   var config = window.APP_CONFIG || {};
   var calc = window.AccountingCalc;
 
@@ -281,11 +281,10 @@
     dom.updatedAt.textContent = formatDateTime(payload.meta && payload.meta.generatedAt);
 
     dom.metricCollection.textContent = formatYen(summary.collectionTotal);
-    dom.metricOutflow.textContent = formatYen(summary.expensesTotal + summary.plannedReimbursementsTotal);
+    dom.metricOutflow.textContent = formatYen(toNumber(summary.expensesTotal) + toNumber(summary.plannedReimbursementsTotal));
     dom.metricBalance.textContent = formatYen(summary.currentBalance);
     dom.metricPaidInfo.textContent = "済 " + summary.paidMembers + "名 / 未 " + summary.unpaidMembers + "名";
-    dom.metricOutflowInfo.textContent =
-      "経費 " + formatYen(summary.expensesTotal) + " / 返金予定 " + formatYen(summary.plannedReimbursementsTotal);
+    dom.metricOutflowInfo.textContent = formatOutflowDetail(summary.expensesTotal, summary.plannedReimbursementsTotal);
 
     updateBalanceInfo(summary);
     renderCollectionList(collection);
@@ -304,7 +303,7 @@
     dom.metricOutflow.textContent = formatYen(0);
     dom.metricBalance.textContent = formatYen(0);
     dom.metricPaidInfo.textContent = "済 0名 / 未 0名";
-    dom.metricOutflowInfo.textContent = "経費 ¥0 / 返金予定 ¥0";
+    dom.metricOutflowInfo.textContent = formatOutflowDetail(0, 0);
     dom.metricBalanceInfo.textContent = "表示データがありません。";
     dom.collectionList.innerHTML = '<p class="line-sub">表示データがありません。</p>';
     dom.expensesList.innerHTML = '<p class="line-sub">表示データがありません。</p>';
@@ -659,24 +658,17 @@
       state.charts.balance.destroy();
     }
 
-    var hasInnerData =
-      composition.baseAmount > 0 &&
-      composition.expensesInBase + composition.reimburseInBase + composition.balanceInBase > 0;
+    var hasInnerData = composition.baseAmount > 0 && composition.outflowInBase + composition.balanceInBase > 0;
 
-    var innerData = hasInnerData
-      ? [composition.expensesInBase, composition.reimburseInBase, composition.balanceInBase]
-      : [1];
+    var innerData = hasInnerData ? [composition.outflowInBase, composition.balanceInBase] : [1];
 
     var innerMeta = [
       {
-        label: "経費",
-        amount: composition.expensesInBase,
-        percent: composition.percentages.expenses
-      },
-      {
-        label: "返金予定（予算内）",
-        amount: composition.reimburseInBase,
-        percent: composition.percentages.reimbursements
+        label: "出費",
+        amount: composition.outflowInBase,
+        displayAmount: composition.outflowTotal,
+        percent: composition.percentages.outflow,
+        detail: formatOutflowDetail(composition.expensesTotal, composition.plannedReimbursementsTotal)
       },
       {
         label: "残高",
@@ -685,7 +677,7 @@
       }
     ];
 
-    var innerColors = hasInnerData ? ["#4f8a4a", "#c86134", "#78b86f"] : ["#dce6dd"];
+    var innerColors = hasInnerData ? ["#c86134", "#78b86f"] : ["#dce6dd"];
 
     var outerBase = composition.baseAmount > 0 ? composition.baseAmount : composition.shortageAmount > 0 ? composition.shortageAmount : 1;
     var outerShortageVisual = composition.shortageAmount > 0 ? Math.min(composition.shortageAmount, outerBase) : 0;
@@ -730,7 +722,14 @@
                   if (!meta || meta.amount <= 0) {
                     return "";
                   }
-                  return meta.label + ": " + formatYen(meta.amount) + " (" + formatPercent(meta.percent) + ")";
+                  var displayAmount = meta.displayAmount !== undefined ? meta.displayAmount : meta.amount;
+                  if (meta.detail) {
+                    return [
+                      meta.label + ": " + formatYen(displayAmount) + " (" + formatPercent(meta.percent) + ")",
+                      meta.detail
+                    ];
+                  }
+                  return meta.label + ": " + formatYen(displayAmount) + " (" + formatPercent(meta.percent) + ")";
                 }
 
                 if (context.datasetIndex === 1 && context.dataIndex === 0 && composition.shortageAmount > 0) {
@@ -758,16 +757,11 @@
 
     var items = [
       {
-        label: "経費",
-        color: "#4f8a4a",
-        amount: composition.expensesInBase,
-        percent: composition.percentages.expenses
-      },
-      {
-        label: "返金予定（予算内）",
+        label: "出費",
         color: "#c86134",
-        amount: composition.reimburseInBase,
-        percent: composition.percentages.reimbursements
+        amount: composition.outflowTotal,
+        percent: composition.percentages.outflow,
+        note: formatOutflowDetail(composition.expensesTotal, composition.plannedReimbursementsTotal)
       },
       {
         label: "残高",
@@ -789,16 +783,17 @@
     dom.balanceBreakdown.innerHTML = items
       .map(function (item) {
         return (
-          '<li class="flex items-center justify-between gap-2">' +
-          '<span class="inline-flex min-w-0 items-center gap-2">' +
-          '<span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background-color:' +
+          '<li class="flex items-start justify-between gap-2">' +
+          '<span class="inline-flex min-w-0 gap-2">' +
+          '<span class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full" style="background-color:' +
           item.color +
           '"></span>' +
-          '<span class="truncate">' +
+          '<span class="min-w-0"><span class="block truncate">' +
           escapeHtml(item.label) +
           "</span>" +
+          (item.note ? '<span class="line-sub">' + escapeHtml(item.note) + "</span>" : "") +
           "</span>" +
-          '<span class="shrink-0 font-semibold">' +
+          '<span class="shrink-0 pt-0.5 font-semibold">' +
           formatYen(item.amount) +
           " / " +
           formatPercent(item.percent) +
@@ -860,15 +855,20 @@
 
   function createFallbackBalanceComposition(summary) {
     var baseAmount = Math.max(0, toNumber(summary.collectionTotal));
-    var expensesInBase = Math.min(Math.max(0, toNumber(summary.expensesTotal)), baseAmount);
+    var expensesTotal = Math.max(0, toNumber(summary.expensesTotal));
+    var plannedReimbursementsTotal = Math.max(0, toNumber(summary.plannedReimbursementsTotal));
+    var expensesInBase = Math.min(expensesTotal, baseAmount);
     var refundBudget = Math.max(baseAmount - expensesInBase, 0);
-    var reimburseInBase = Math.min(Math.max(0, toNumber(summary.plannedReimbursementsTotal)), refundBudget);
-    var balanceInBase = Math.max(refundBudget - reimburseInBase, 0);
-    var shortageAmount = Math.max(Math.max(0, toNumber(summary.plannedReimbursementsTotal)) - refundBudget, 0);
+    var reimburseInBase = Math.min(plannedReimbursementsTotal, refundBudget);
+    var outflowTotal = expensesTotal + plannedReimbursementsTotal;
+    var outflowInBase = Math.min(outflowTotal, baseAmount);
+    var balanceInBase = Math.max(baseAmount - outflowInBase, 0);
+    var shortageAmount = Math.max(outflowTotal - baseAmount, 0);
 
     var percentages = {
       expenses: 0,
       reimbursements: 0,
+      outflow: 0,
       balance: 0,
       shortage: 0
     };
@@ -876,6 +876,7 @@
     if (baseAmount > 0) {
       percentages.expenses = (expensesInBase / baseAmount) * 100;
       percentages.reimbursements = (reimburseInBase / baseAmount) * 100;
+      percentages.outflow = (outflowInBase / baseAmount) * 100;
       percentages.balance = (balanceInBase / baseAmount) * 100;
       percentages.shortage = (shortageAmount / baseAmount) * 100;
     } else if (shortageAmount > 0) {
@@ -884,8 +885,12 @@
 
     return {
       baseAmount: baseAmount,
+      expensesTotal: expensesTotal,
+      plannedReimbursementsTotal: plannedReimbursementsTotal,
       expensesInBase: expensesInBase,
       reimburseInBase: reimburseInBase,
+      outflowTotal: outflowTotal,
+      outflowInBase: outflowInBase,
       balanceInBase: balanceInBase,
       shortageAmount: shortageAmount,
       percentages: percentages
@@ -922,6 +927,10 @@
   function formatYen(value) {
     var numeric = normalizeNumber(value, 0);
     return "¥" + numeric.toLocaleString("ja-JP");
+  }
+
+  function formatOutflowDetail(expensesTotal, plannedReimbursementsTotal) {
+    return "経費 " + formatYen(expensesTotal) + " / 立替返金予定 " + formatYen(plannedReimbursementsTotal);
   }
 
   function formatDateTime(value) {
