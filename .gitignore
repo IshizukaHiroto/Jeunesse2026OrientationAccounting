@@ -1,6 +1,12 @@
 .codex/
 .env
+.DS_Store
 node_modules/
+.playwright-cli/
+output/playwright/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
 testMovies/raw/
 testMovies/review/
 testMovies/*.webm
