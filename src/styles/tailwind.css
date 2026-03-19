@@ -222,8 +222,12 @@
     @apply flex flex-col items-start gap-3 border-b border-court-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between;
   }
 
+  .collection-toolbar {
+    @apply flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end;
+  }
+
   .sort-controls {
-    @apply inline-grid grid-cols-2 rounded-xl border border-court-100 bg-court-50 p-1;
+    @apply grid w-full grid-cols-2 rounded-xl border border-court-100 bg-court-50 p-1 sm:inline-grid sm:w-auto;
   }
 
   .sort-btn {
@@ -233,6 +237,15 @@
   .sort-btn[aria-pressed="true"],
   .sort-btn.is-active {
     @apply border-court-100 bg-white text-court-900;
+  }
+
+  .filter-chip-btn {
+    @apply inline-flex min-h-[44px] w-full items-center justify-center rounded-full border border-court-100 bg-white px-4 py-2 text-sm font-semibold text-court-900 transition-colors hover:border-court-300 hover:bg-court-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-court-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:min-h-10 sm:w-auto sm:px-4 sm:py-1 sm:text-xs;
+  }
+
+  .filter-chip-btn[aria-pressed="true"],
+  .filter-chip-btn.is-active {
+    @apply border-court-700 bg-court-700 text-court-50 hover:border-court-900 hover:bg-court-900;
   }
 
   .status-chip {

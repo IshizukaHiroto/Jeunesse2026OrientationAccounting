@@ -28,6 +28,9 @@
       expenses: LIST_STEP,
       reimbursements: LIST_STEP
     },
+    filters: {
+      collectionPaidOnly: false
+    },
     sort: {
       collection: "asc",
       reimbursements: "asc"
@@ -60,6 +63,7 @@
     reimbursementsMoreButton: document.getElementById("reimbursements-more-btn"),
     collectionSortAscButton: document.getElementById("collection-sort-asc-btn"),
     collectionSortDescButton: document.getElementById("collection-sort-desc-btn"),
+    collectionPaidOnlyButton: document.getElementById("collection-paid-only-btn"),
     reimbursementsSortAscButton: document.getElementById("reimbursements-sort-asc-btn"),
     reimbursementsSortDescButton: document.getElementById("reimbursements-sort-desc-btn"),
     collectionChart: document.getElementById("collection-chart"),
@@ -76,6 +80,7 @@
   switchView(state.currentView);
   updateSortControlUI("collection");
   updateSortControlUI("reimbursements");
+  updateCollectionFilterUI();
 
   refreshData({ source: "initial" });
   startPolling();
@@ -89,7 +94,10 @@
 
     if (dom.collectionMoreButton) {
       dom.collectionMoreButton.addEventListener("click", function () {
-        toggleListLimit("collection", state.latestPayload ? state.latestPayload.collection.length : 0);
+        toggleListLimit(
+          "collection",
+          getFilteredCollectionRows((state.latestPayload && state.latestPayload.collection) || []).length
+        );
         renderCollectionList((state.latestPayload && state.latestPayload.collection) || []);
       });
     }
@@ -117,6 +125,12 @@
     if (dom.collectionSortDescButton) {
       dom.collectionSortDescButton.addEventListener("click", function () {
         setSortDirection("collection", "desc");
+      });
+    }
+
+    if (dom.collectionPaidOnlyButton) {
+      dom.collectionPaidOnlyButton.addEventListener("click", function () {
+        toggleCollectionPaidOnlyFilter();
       });
     }
 
@@ -269,24 +283,40 @@
 
   function updateSortControlUI(key) {
     if (key === "collection") {
-      setSortButtonState(dom.collectionSortAscButton, state.sort.collection === "asc");
-      setSortButtonState(dom.collectionSortDescButton, state.sort.collection === "desc");
+      setPressedButtonState(dom.collectionSortAscButton, state.sort.collection === "asc");
+      setPressedButtonState(dom.collectionSortDescButton, state.sort.collection === "desc");
       return;
     }
 
     if (key === "reimbursements") {
-      setSortButtonState(dom.reimbursementsSortAscButton, state.sort.reimbursements === "asc");
-      setSortButtonState(dom.reimbursementsSortDescButton, state.sort.reimbursements === "desc");
+      setPressedButtonState(dom.reimbursementsSortAscButton, state.sort.reimbursements === "asc");
+      setPressedButtonState(dom.reimbursementsSortDescButton, state.sort.reimbursements === "desc");
     }
   }
 
-  function setSortButtonState(button, isActive) {
+  function updateCollectionFilterUI() {
+    setPressedButtonState(dom.collectionPaidOnlyButton, state.filters.collectionPaidOnly);
+  }
+
+  function setPressedButtonState(button, isActive) {
     if (!button) {
       return;
     }
 
     button.setAttribute("aria-pressed", isActive ? "true" : "false");
     button.classList.toggle("is-active", isActive);
+  }
+
+  function toggleCollectionPaidOnlyFilter() {
+    state.filters.collectionPaidOnly = !state.filters.collectionPaidOnly;
+    state.limits.collection = LIST_STEP;
+    updateCollectionFilterUI();
+
+    if (!state.latestPayload) {
+      return;
+    }
+
+    renderCollectionList(state.latestPayload.collection || []);
   }
 
   async function refreshData(options) {
@@ -526,14 +556,16 @@
   }
 
   function renderCollectionList(rows) {
-    var sortedRows = sortRowsByState("collection", rows);
+    var sortedRows = sortRowsByState("collection", getFilteredCollectionRows(rows));
 
     renderList({
       rows: sortedRows,
       limitKey: "collection",
       container: dom.collectionList,
       button: dom.collectionMoreButton,
-      emptyMessage: "集金データはまだありません。",
+      emptyMessage: state.filters.collectionPaidOnly
+        ? "支払い済みの集金データはまだありません。"
+        : "集金データはまだありません。",
       renderRow: function (row) {
         var statusLabel = row.paymentStatus === "済" ? "支払い済" : "未払い";
         var statusClass = row.paymentStatus === "済" ? "status-chip-ok" : "status-chip-warn";
@@ -553,6 +585,17 @@
           "</span></div></article>"
         );
       }
+    });
+  }
+
+  function getFilteredCollectionRows(rows) {
+    var normalizedRows = Array.isArray(rows) ? rows : [];
+    if (!state.filters.collectionPaidOnly) {
+      return normalizedRows;
+    }
+
+    return normalizedRows.filter(function (row) {
+      return String(row && row.paymentStatus ? row.paymentStatus : "").trim() === "済";
     });
   }
 

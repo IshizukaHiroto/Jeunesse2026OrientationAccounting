@@ -191,11 +191,23 @@
             <div class="section-header">
               <div>
                 <h2 class="font-display text-lg font-semibold text-court-900">集金状況</h2>
-                <p class="mt-1 text-xs text-court-700">上位5件から表示。名前で昇順/降順の切替ができます。</p>
+                <p class="mt-1 text-xs text-court-700">
+                  上位5件から表示。支払い済みだけの絞り込みと、名前で昇順/降順の切替ができます。
+                </p>
               </div>
-              <div class="sort-controls" role="group" aria-label="集金並び替え">
-                <button id="collection-sort-asc-btn" type="button" class="sort-btn" aria-pressed="true">昇順</button>
-                <button id="collection-sort-desc-btn" type="button" class="sort-btn" aria-pressed="false">降順</button>
+              <div class="collection-toolbar">
+                <div class="sort-controls" role="group" aria-label="集金並び替え">
+                  <button id="collection-sort-asc-btn" type="button" class="sort-btn" aria-pressed="true">昇順</button>
+                  <button id="collection-sort-desc-btn" type="button" class="sort-btn" aria-pressed="false">降順</button>
+                </div>
+                <button
+                  id="collection-paid-only-btn"
+                  type="button"
+                  class="filter-chip-btn"
+                  aria-pressed="false"
+                >
+                  支払い済みだけ
+                </button>
               </div>
             </div>
             <div class="px-4 pb-4 pt-3">
