@@ -6,6 +6,8 @@
   var VIEW_IDS = ["summary", "collection", "outflow"];
   var config = window.APP_CONFIG || {};
   var calc = window.AccountingCalc;
+  var POLLING_MS = normalizeNumber(config.POLLING_MS, 60000);
+  var SYNC_CHIP_BASE_CLASS = "hero-status-chip shrink-0 whitespace-nowrap";
 
   if (!calc) {
     throw new Error("AccountingCalc is not available. Make sure src/calc.js is loaded.");
@@ -20,6 +22,7 @@
       collection: null,
       balance: null
     },
+    pollingTimerId: null,
     limits: {
       collection: LIST_STEP,
       expenses: LIST_STEP,
@@ -64,9 +67,10 @@
     collectionChartEmpty: document.getElementById("collection-chart-empty"),
     balanceChartEmpty: document.getElementById("balance-chart-empty"),
     balanceBreakdown: document.getElementById("balance-breakdown"),
-    viewButtons: document.querySelectorAll("[data-view]"),
+    viewButtons: document.querySelectorAll("[data-view][role='tab']"),
     viewPanels: document.querySelectorAll("[data-view-panel]")
   };
+  var chartPalette = readChartPalette();
 
   attachEvents();
   switchView(state.currentView);
@@ -74,9 +78,7 @@
   updateSortControlUI("reimbursements");
 
   refreshData({ source: "initial" });
-  window.setInterval(function () {
-    refreshData({ source: "polling" });
-  }, normalizeNumber(config.POLLING_MS, 60000));
+  startPolling();
 
   function attachEvents() {
     if (dom.refreshButton) {
@@ -135,7 +137,71 @@
         var viewId = button.getAttribute("data-view");
         switchView(viewId);
       });
+
+      button.addEventListener("keydown", function (event) {
+        handleViewKeydown(event, button);
+      });
     });
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+  }
+
+  function handleViewKeydown(event, currentButton) {
+    var tabList = currentButton.closest("[role='tablist']");
+    if (!tabList) {
+      return;
+    }
+
+    var tabs = Array.prototype.slice.call(tabList.querySelectorAll("[role='tab']"));
+    var currentIndex = tabs.indexOf(currentButton);
+    var nextIndex = -1;
+
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+      nextIndex = (currentIndex + 1) % tabs.length;
+    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = tabs.length - 1;
+    }
+
+    if (nextIndex === -1) {
+      return;
+    }
+
+    event.preventDefault();
+    switchView(tabs[nextIndex].getAttribute("data-view"));
+    tabs[nextIndex].focus();
+  }
+
+  function startPolling() {
+    if (state.pollingTimerId || document.visibilityState === "hidden") {
+      return;
+    }
+
+    state.pollingTimerId = window.setInterval(function () {
+      refreshData({ source: "polling" });
+    }, POLLING_MS);
+  }
+
+  function stopPolling() {
+    if (!state.pollingTimerId) {
+      return;
+    }
+
+    window.clearInterval(state.pollingTimerId);
+    state.pollingTimerId = null;
+  }
+
+  function handleVisibilityChange() {
+    if (document.visibilityState === "hidden") {
+      stopPolling();
+      return;
+    }
+
+    startPolling();
+    refreshData({ source: "resume" });
   }
 
   function switchView(viewId) {
@@ -148,23 +214,29 @@
     Array.prototype.forEach.call(dom.viewPanels, function (panel) {
       var panelId = panel.getAttribute("data-view-panel");
       var isActive = panelId === viewId;
-      panel.classList.toggle("hidden", !isActive);
-      panel.setAttribute("aria-hidden", isActive ? "false" : "true");
+      setViewPanelState(panel, isActive);
     });
 
     Array.prototype.forEach.call(dom.viewButtons, function (button) {
       var isActive = button.getAttribute("data-view") === viewId;
-      button.classList.toggle("is-active", isActive);
-      if (isActive) {
-        button.setAttribute("aria-current", "page");
-      } else {
-        button.removeAttribute("aria-current");
-      }
+      setViewButtonState(button, isActive);
     });
 
     if (viewId === "summary") {
       renderChartsFromSnapshot();
     }
+  }
+
+  function setViewPanelState(panel, isActive) {
+    panel.classList.toggle("hidden", !isActive);
+    panel.setAttribute("aria-hidden", isActive ? "false" : "true");
+    panel.tabIndex = isActive ? 0 : -1;
+  }
+
+  function setViewButtonState(button, isActive) {
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-selected", isActive ? "true" : "false");
+    button.tabIndex = isActive ? 0 : -1;
   }
 
   function setSortDirection(key, direction) {
@@ -350,6 +422,24 @@
     if (dom.refundCapNote) {
       dom.refundCapNote.textContent = label;
     }
+  }
+
+  function readChartPalette() {
+    var styles = window.getComputedStyle(document.documentElement);
+
+    return {
+      paid: readCssVar(styles, "--chart-paid", "#437147"),
+      unpaid: readCssVar(styles, "--chart-unpaid", "#c86134"),
+      outflow: readCssVar(styles, "--chart-outflow", "#c86134"),
+      balance: readCssVar(styles, "--chart-balance", "#477c48"),
+      shortage: readCssVar(styles, "--chart-shortage", "#b0412a"),
+      divider: readCssVar(styles, "--chart-divider", "#f4f7f1")
+    };
+  }
+
+  function readCssVar(styles, key, fallback) {
+    var value = styles.getPropertyValue(key);
+    return value ? value.trim() : fallback;
   }
 
   function renderChartsFromSnapshot() {
@@ -614,8 +704,8 @@
         datasets: [
           {
             data: [paidMembers, unpaidMembers],
-            backgroundColor: ["#4f8a4a", "#c86134"],
-            borderColor: "#ffffff",
+            backgroundColor: [chartPalette.paid, chartPalette.unpaid],
+            borderColor: chartPalette.divider,
             borderWidth: 2
           }
         ]
@@ -666,7 +756,9 @@
       }
     ];
 
-    var innerColors = hasBaseAmount ? ["#c86134", "#78b86f"] : ["rgba(0,0,0,0)", "rgba(0,0,0,0)"];
+    var innerColors = hasBaseAmount
+      ? [chartPalette.outflow, chartPalette.balance]
+      : ["rgba(0,0,0,0)", "rgba(0,0,0,0)"];
 
     var outerBase = composition.baseAmount > 0 ? composition.baseAmount : composition.shortageAmount > 0 ? composition.shortageAmount : 1;
     var outerShortageVisual = composition.shortageAmount > 0 ? Math.min(composition.shortageAmount, outerBase) : 0;
@@ -681,15 +773,15 @@
             label: "内訳",
             data: innerData,
             backgroundColor: innerColors,
-            borderColor: hasBaseAmount ? "#ffffff" : "rgba(0,0,0,0)",
+            borderColor: hasBaseAmount ? chartPalette.divider : "rgba(0,0,0,0)",
             borderWidth: hasBaseAmount ? 2 : 0,
             weight: 1
           },
           {
             label: "不足",
             data: [outerShortageVisual, outerNeutral],
-            backgroundColor: ["#d2372c", "rgba(0,0,0,0)"],
-            borderColor: ["#ffffff", "rgba(0,0,0,0)"],
+            backgroundColor: [chartPalette.shortage, "rgba(0,0,0,0)"],
+            borderColor: [chartPalette.divider, "rgba(0,0,0,0)"],
             borderWidth: [outerShortageVisual > 0 ? 2 : 0, 0],
             weight: 0.55
           }
@@ -774,7 +866,7 @@
     if (composition.baseAmount > 0 && composition.outflowTotal > 0) {
       items.push({
         label: "出費",
-        color: "#c86134",
+        color: chartPalette.outflow,
         amount: composition.outflowTotal,
         percent: composition.percentages.outflow,
         note: formatOutflowDetail(composition.expensesTotal, composition.plannedReimbursementsTotal)
@@ -784,7 +876,7 @@
     if (composition.baseAmount > 0 && composition.balanceInBase > 0) {
       items.push({
         label: "残高",
-        color: "#78b86f",
+        color: chartPalette.balance,
         amount: composition.balanceInBase,
         percent: composition.percentages.balance
       });
@@ -793,7 +885,7 @@
     if (composition.shortageAmount > 0) {
       items.push({
         label: "不足分",
-        color: "#d2372c",
+        color: chartPalette.shortage,
         amount: composition.shortageAmount,
         percent: composition.percentages.shortage
       });
@@ -851,25 +943,32 @@
       }
     }
 
-    if (isLoading && dom.syncChip) {
-      dom.syncChip.className = "status-chip-ok shrink-0 whitespace-nowrap";
-      dom.syncChip.textContent = "更新中";
+    if (isLoading) {
+      setSyncChipStatus("ok", "更新中");
     }
   }
 
   function setSyncState(type, message) {
     if (type === "ok") {
-      dom.syncChip.className = "status-chip-ok shrink-0 whitespace-nowrap";
-      dom.syncChip.textContent = "更新済み";
+      setSyncChipStatus("ok", "更新済み");
       dom.syncBanner.className = "mt-4 hidden rounded-xl border px-4 py-3 text-sm";
       dom.syncBanner.textContent = "";
       return;
     }
 
-    dom.syncChip.className = "status-chip-warn shrink-0 whitespace-nowrap";
-    dom.syncChip.textContent = "要確認";
+    setSyncChipStatus("warn", "要確認");
     dom.syncBanner.className = "mt-4 rounded-xl border border-clay-500/40 bg-clay-100 px-4 py-3 text-sm text-clay-700";
     dom.syncBanner.textContent = message;
+  }
+
+  function setSyncChipStatus(type, label) {
+    if (!dom.syncChip) {
+      return;
+    }
+
+    dom.syncChip.className =
+      (type === "warn" ? "status-chip-warn " : "status-chip-ok ") + SYNC_CHIP_BASE_CLASS;
+    dom.syncChip.textContent = label;
   }
 
   function createFallbackBalanceComposition(summary) {

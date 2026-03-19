@@ -22,50 +22,95 @@
       <aside class="app-sidebar" aria-label="デスクトップメニュー">
         <div class="sidebar-brand">
           <p class="sidebar-eyebrow">Jeunesse 2026</p>
-          <h1 class="sidebar-heading">新歓会計ダッシュボード</h1>
+          <p class="sidebar-heading">新歓会計ダッシュボード</p>
         </div>
 
-        <nav class="sidebar-nav" aria-label="画面切替">
-          <button type="button" class="nav-item is-active" data-view="summary" aria-current="page">サマリー</button>
-          <button type="button" class="nav-item" data-view="collection">集金</button>
-          <button type="button" class="nav-item" data-view="outflow">出費</button>
+        <nav class="sidebar-nav" aria-label="画面切替" role="tablist">
+          <button
+            type="button"
+            id="desktop-tab-summary"
+            class="nav-item is-active"
+            data-view="summary"
+            role="tab"
+            aria-controls="view-panel-summary"
+            aria-selected="true"
+            tabindex="0"
+          >
+            サマリー
+          </button>
+          <button
+            type="button"
+            id="desktop-tab-collection"
+            class="nav-item"
+            data-view="collection"
+            role="tab"
+            aria-controls="view-panel-collection"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            集金
+          </button>
+          <button
+            type="button"
+            id="desktop-tab-outflow"
+            class="nav-item"
+            data-view="outflow"
+            role="tab"
+            aria-controls="view-panel-outflow"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            出費
+          </button>
         </nav>
       </aside>
 
       <main class="app-main">
-        <header class="top-panel relative overflow-hidden p-5 sm:p-7">
-          <div class="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10"></div>
-          <div class="absolute -bottom-12 left-14 h-28 w-28 rounded-full bg-clay-100/30"></div>
-
-          <div class="relative flex items-start justify-between gap-3">
-            <div class="min-w-0">
-              <p class="font-display text-xs uppercase tracking-[0.14em] text-white/80">Jeunesse 2026</p>
-              <p class="mt-2 font-display text-2xl font-bold leading-tight sm:text-3xl">新歓会計ダッシュボード</p>
-              <p class="mt-2 text-sm text-white/90">メニューを切り替えて集金と出費の状況を確認できます。</p>
+        <header class="top-panel">
+          <div class="hero-header">
+            <div class="hero-copy">
+              <p class="hero-eyebrow">Jeunesse 2026</p>
+              <h1 class="hero-title">新歓会計ダッシュボード</h1>
+              <p class="hero-description">メニューを切り替えて集金と出費の状況を確認できます。</p>
             </div>
-            <button
-              id="manual-refresh-btn"
-              class="ghost-btn refresh-btn shrink-0 border-white/60 bg-white/10 text-white hover:bg-white/20"
-              data-loading="false"
-              aria-busy="false"
-            >
-              <span id="refresh-label" class="refresh-label">今すぐ更新</span>
-            </button>
+            <div class="hero-actions">
+              <button
+                id="manual-refresh-btn"
+                class="ghost-btn refresh-btn refresh-btn-hero"
+                data-loading="false"
+                aria-busy="false"
+              >
+                <span id="refresh-label" class="refresh-label">今すぐ更新</span>
+              </button>
+            </div>
           </div>
 
-          <div class="relative mt-4 flex items-center gap-2 overflow-hidden text-xs sm:text-sm">
-            <span id="sync-chip" class="status-chip-ok shrink-0 whitespace-nowrap">準備中</span>
-            <span class="min-w-0 truncate rounded-full bg-white/20 px-3 py-1 text-white/90">
+          <div class="hero-status-row">
+            <span id="sync-chip" class="status-chip-ok hero-status-chip shrink-0 whitespace-nowrap">準備中</span>
+            <span class="hero-updated-chip">
               最終反映: <span id="updated-at">--</span>
             </span>
           </div>
         </header>
 
-        <section id="sync-banner" class="mt-4 hidden rounded-xl border px-4 py-3 text-sm"></section>
+        <section
+          id="sync-banner"
+          class="mt-4 hidden rounded-xl border px-4 py-3 text-sm"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        ></section>
         <section id="loading-notice" class="loading-notice mt-3 hidden" aria-live="polite"></section>
 
-        <section class="view-panel" data-view-panel="summary">
-          <section class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <section
+          id="view-panel-summary"
+          class="view-panel"
+          data-view-panel="summary"
+          role="tabpanel"
+          aria-labelledby="desktop-tab-summary mobile-tab-summary"
+          tabindex="0"
+        >
+          <section class="summary-metrics mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <article class="metric-card">
               <p class="metric-label">集金総額</p>
               <p id="metric-collection" class="metric-value">¥0</p>
@@ -87,8 +132,8 @@
             <div class="px-4 pb-4 pt-4">
               <h2 class="font-display text-lg font-semibold text-court-900">集金と残高の円グラフ</h2>
               <p class="mt-1 text-xs text-court-700">集金状況と、集金総額100%に対するお金の内訳を表示します。</p>
-              <div class="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <section class="rounded-xl border border-court-100 bg-court-50/60 p-3">
+              <div class="summary-subsections">
+                <section class="summary-subsection">
                   <h3 class="text-sm font-semibold text-court-900">集金進捗</h3>
                   <p class="mt-1 text-xs text-court-700">済 / 未 の割合</p>
                   <div class="chart-stage mt-3">
@@ -96,7 +141,7 @@
                     <p id="collection-chart-empty" class="chart-empty">データを読み込み中です。</p>
                   </div>
                 </section>
-                <section class="rounded-xl border border-court-100 bg-court-50/60 p-3">
+                <section class="summary-subsection">
                   <h3 class="text-sm font-semibold text-court-900">残高内訳</h3>
                   <p class="mt-1 text-xs text-court-700">集金総額をもとに、出費・残高・不足分を表示します。</p>
                   <div class="chart-stage mt-3">
@@ -133,7 +178,15 @@
           </article>
         </section>
 
-        <section class="view-panel hidden" data-view-panel="collection" aria-hidden="true">
+        <section
+          id="view-panel-collection"
+          class="view-panel hidden"
+          data-view-panel="collection"
+          role="tabpanel"
+          aria-labelledby="desktop-tab-collection mobile-tab-collection"
+          aria-hidden="true"
+          tabindex="-1"
+        >
           <article class="section-shell">
             <div class="section-header">
               <div>
@@ -152,7 +205,15 @@
           </article>
         </section>
 
-        <section class="view-panel hidden" data-view-panel="outflow" aria-hidden="true">
+        <section
+          id="view-panel-outflow"
+          class="view-panel hidden"
+          data-view-panel="outflow"
+          role="tabpanel"
+          aria-labelledby="desktop-tab-outflow mobile-tab-outflow"
+          aria-hidden="true"
+          tabindex="-1"
+        >
           <article class="section-shell">
             <div class="section-header">
               <div>
@@ -203,10 +264,43 @@
       </main>
     </div>
 
-    <nav class="mobile-tabbar" aria-label="モバイルメニュー">
-      <button type="button" class="mobile-tab-item is-active" data-view="summary" aria-current="page">サマリー</button>
-      <button type="button" class="mobile-tab-item" data-view="collection">集金</button>
-      <button type="button" class="mobile-tab-item" data-view="outflow">出費</button>
+    <nav class="mobile-tabbar" aria-label="モバイルメニュー" role="tablist">
+      <button
+        type="button"
+        id="mobile-tab-summary"
+        class="mobile-tab-item is-active"
+        data-view="summary"
+        role="tab"
+        aria-controls="view-panel-summary"
+        aria-selected="true"
+        tabindex="0"
+      >
+        サマリー
+      </button>
+      <button
+        type="button"
+        id="mobile-tab-collection"
+        class="mobile-tab-item"
+        data-view="collection"
+        role="tab"
+        aria-controls="view-panel-collection"
+        aria-selected="false"
+        tabindex="-1"
+      >
+        集金
+      </button>
+      <button
+        type="button"
+        id="mobile-tab-outflow"
+        class="mobile-tab-item"
+        data-view="outflow"
+        role="tab"
+        aria-controls="view-panel-outflow"
+        aria-selected="false"
+        tabindex="-1"
+      >
+        出費
+      </button>
     </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
