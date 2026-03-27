@@ -7,7 +7,7 @@
   var config = window.APP_CONFIG || {};
   var calc = window.AccountingCalc;
   var POLLING_MS = normalizeNumber(config.POLLING_MS, 60000);
-  var SYNC_CHIP_BASE_CLASS = "hero-status-chip shrink-0 whitespace-nowrap";
+  var SYNC_CHIP_BASE_CLASS = "nav-status-chip shrink-0 whitespace-nowrap";
 
   if (!calc) {
     throw new Error("AccountingCalc is not available. Make sure src/calc.js is loaded.");
