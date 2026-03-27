@@ -66,32 +66,34 @@
       </aside>
 
       <main class="app-main">
-        <header class="top-panel">
-          <div class="hero-header">
-            <div class="hero-copy">
-              <p class="hero-eyebrow">Jeunesse 2026</p>
-              <h1 class="hero-title">新歓会計ダッシュボード</h1>
-              <p class="hero-description">メニューを切り替えて集金と出費の状況を確認できます。</p>
-            </div>
-            <div class="hero-actions">
-              <button
-                id="manual-refresh-btn"
-                class="ghost-btn refresh-btn refresh-btn-hero"
-                data-loading="false"
-                aria-busy="false"
-              >
-                <span id="refresh-label" class="refresh-label">今すぐ更新</span>
-              </button>
-            </div>
+        <nav class="top-navbar" aria-label="サイトナビゲーション">
+          <span class="brand-logo" aria-label="Jeunesse2026">
+            <span class="brand-letter" aria-hidden="true">J</span>
+            <span class="brand-letter" aria-hidden="true">e</span>
+            <span class="brand-letter" aria-hidden="true">u</span>
+            <span class="brand-letter" aria-hidden="true">n</span>
+            <span class="brand-letter" aria-hidden="true">e</span>
+            <span class="brand-letter" aria-hidden="true">s</span>
+            <span class="brand-letter" aria-hidden="true">s</span>
+            <span class="brand-letter" aria-hidden="true">e</span>
+            <span class="brand-letter" aria-hidden="true">2</span>
+            <span class="brand-letter" aria-hidden="true">0</span>
+            <span class="brand-letter" aria-hidden="true">2</span>
+            <span class="brand-letter" aria-hidden="true">6</span>
+          </span>
+          <div class="navbar-actions">
+            <span id="sync-chip" class="status-chip-ok nav-status-chip shrink-0 whitespace-nowrap">準備中</span>
+            <span class="nav-updated-chip">最終反映: <span id="updated-at">--</span></span>
+            <button
+              id="manual-refresh-btn"
+              class="ghost-btn refresh-btn refresh-btn-nav"
+              data-loading="false"
+              aria-busy="false"
+            >
+              <span id="refresh-label" class="refresh-label">今すぐ更新</span>
+            </button>
           </div>
-
-          <div class="hero-status-row">
-            <span id="sync-chip" class="status-chip-ok hero-status-chip shrink-0 whitespace-nowrap">準備中</span>
-            <span class="hero-updated-chip">
-              最終反映: <span id="updated-at">--</span>
-            </span>
-          </div>
-        </header>
+        </nav>
 
         <section
           id="sync-banner"
@@ -131,7 +133,6 @@
           <article class="section-shell">
             <div class="px-4 pb-4 pt-4">
               <h2 class="font-display text-lg font-semibold text-court-900">集金と残高の円グラフ</h2>
-              <p class="mt-1 text-xs text-court-700">集金状況と、集金総額100%に対するお金の内訳を表示します。</p>
               <div class="summary-subsections">
                 <section class="summary-subsection">
                   <h3 class="text-sm font-semibold text-court-900">集金進捗</h3>
@@ -154,9 +155,8 @@
             </div>
           </article>
 
-          <article id="settlement-guide" class="section-shell">
+          <article id="settlement-guide" class="section-shell" aria-label="精算ガイド">
             <div class="px-4 pb-4 pt-4">
-              <h2 class="font-display text-lg font-semibold text-court-900">精算ガイド</h2>
               <p id="settlement-title" class="mt-3 text-sm font-bold text-court-900">データ待機中</p>
               <p id="settlement-body" class="mt-2 text-sm leading-relaxed text-court-800">データを読み込むと精算方針を表示します。</p>
               <p id="settlement-footnote" class="mt-3 text-xs text-court-700"></p>

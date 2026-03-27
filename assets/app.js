@@ -7,7 +7,7 @@
   var config = window.APP_CONFIG || {};
   var calc = window.AccountingCalc;
   var POLLING_MS = normalizeNumber(config.POLLING_MS, 60000);
-  var SYNC_CHIP_BASE_CLASS = "hero-status-chip shrink-0 whitespace-nowrap";
+  var SYNC_CHIP_BASE_CLASS = "nav-status-chip shrink-0 whitespace-nowrap";
 
   if (!calc) {
     throw new Error("AccountingCalc is not available. Make sure src/calc.js is loaded.");
@@ -53,6 +53,7 @@
     settlementTitle: document.getElementById("settlement-title"),
     settlementBody: document.getElementById("settlement-body"),
     settlementFootnote: document.getElementById("settlement-footnote"),
+    settlementGuide: document.getElementById("settlement-guide"),
     refundCapRule: document.getElementById("refund-cap-rule"),
     refundCapNote: document.getElementById("refund-cap-note"),
     collectionList: document.getElementById("collection-list"),
@@ -703,14 +704,12 @@
 
     if (balance > 0) {
       dom.metricBalance.classList.add("text-court-700");
-      dom.metricBalanceInfo.textContent = "余剰あり。精算ガイドを確認してください。";
-
-      dom.settlementTitle.textContent = "お金が余っています。みんなに同じ金額を返します。";
-      dom.settlementBody.textContent =
-        "集金した人全員に同じ金額を返し、余りは最後の1人に足して合計をぴったり合わせます。";
-      dom.settlementFootnote.textContent = "";
+      dom.metricBalanceInfo.textContent = "";
+      dom.settlementGuide.hidden = true;
       return;
     }
+
+    dom.settlementGuide.hidden = false;
 
     if (balance < 0) {
       dom.metricBalance.classList.add("text-clay-700");
