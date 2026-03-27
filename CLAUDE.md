@@ -192,7 +192,7 @@ npm test
 
 Tests use Node.js native `node --test` (no external test library). All test files are in `tests/`.
 
-- `tests/calc.test.js` — 14 test cases for pure calculation functions
+- `tests/calc.test.js` — tests for pure calculation functions
 - `tests/schema.test.js` — validates JSON payload shape and forbidden-key enforcement
 
 When adding or changing calculation logic:

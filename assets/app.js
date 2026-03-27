@@ -53,6 +53,7 @@
     settlementTitle: document.getElementById("settlement-title"),
     settlementBody: document.getElementById("settlement-body"),
     settlementFootnote: document.getElementById("settlement-footnote"),
+    settlementGuide: document.getElementById("settlement-guide"),
     refundCapRule: document.getElementById("refund-cap-rule"),
     refundCapNote: document.getElementById("refund-cap-note"),
     collectionList: document.getElementById("collection-list"),
@@ -704,12 +705,11 @@
     if (balance > 0) {
       dom.metricBalance.classList.add("text-court-700");
       dom.metricBalanceInfo.textContent = "";
-
-      dom.settlementTitle.textContent = "";
-      dom.settlementBody.textContent = "";
-      dom.settlementFootnote.textContent = "";
+      dom.settlementGuide.hidden = true;
       return;
     }
+
+    dom.settlementGuide.hidden = false;
 
     if (balance < 0) {
       dom.metricBalance.classList.add("text-clay-700");
