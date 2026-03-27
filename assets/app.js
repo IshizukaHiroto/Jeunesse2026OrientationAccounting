@@ -703,11 +703,10 @@
 
     if (balance > 0) {
       dom.metricBalance.classList.add("text-court-700");
-      dom.metricBalanceInfo.textContent = "余剰あり。精算ガイドを確認してください。";
+      dom.metricBalanceInfo.textContent = "";
 
-      dom.settlementTitle.textContent = "お金が余っています。みんなに同じ金額を返します。";
-      dom.settlementBody.textContent =
-        "集金した人全員に同じ金額を返し、余りは最後の1人に足して合計をぴったり合わせます。";
+      dom.settlementTitle.textContent = "";
+      dom.settlementBody.textContent = "";
       dom.settlementFootnote.textContent = "";
       return;
     }
