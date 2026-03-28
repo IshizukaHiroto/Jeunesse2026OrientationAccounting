@@ -59,7 +59,7 @@
   }
 
   .sidebar-brand {
-    @apply flex items-start justify-between border-b border-[#ebe4da] px-7 py-7;
+    @apply border-b border-[#ebe4da] px-7 py-7;
   }
 
   .sidebar-brand-title {
@@ -68,14 +68,6 @@
 
   .sidebar-brand-subtitle {
     @apply mt-2 text-sm font-semibold text-[#858d9d];
-  }
-
-  .sidebar-brand-icon {
-    @apply inline-flex h-8 w-8 items-center justify-center rounded-full text-[#747d8c];
-  }
-
-  .sidebar-brand-icon svg {
-    @apply h-5 w-5;
   }
 
   .sidebar-nav {
@@ -411,7 +403,7 @@
     @apply overflow-hidden rounded-[1.65rem] border border-[#ebe4da] bg-white shadow-[var(--surface-shadow)];
   }
 
-  /* Collection ledger */
+  /* Shared table and card views */
   .table-region {
     @apply px-3 py-3 sm:px-5 sm:py-4;
   }
@@ -419,72 +411,6 @@
   .table-wrapper {
     @apply space-y-4;
   }
-
-  .collection-ledger {
-    @apply space-y-3;
-  }
-
-  .collection-row {
-    @apply flex flex-col gap-3 rounded-[1.45rem] border px-4 py-4 shadow-[var(--surface-shadow-soft)] sm:flex-row sm:items-center sm:justify-between;
-  }
-
-  .collection-row-paid {
-    @apply border-[#e7ecf4] bg-[#fcfbf8];
-  }
-
-  .collection-row-unpaid {
-    @apply border-[#ffe0d1] bg-[#fff8f3];
-  }
-
-  .collection-row-main {
-    @apply flex min-w-0 items-center gap-3;
-  }
-
-  .collection-avatar {
-    @apply inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.15rem] bg-[#1f2533] font-display text-lg font-bold text-white;
-  }
-
-  .collection-row-copy {
-    @apply min-w-0;
-  }
-
-  .collection-row-name {
-    @apply truncate text-base font-bold text-[#1f2533];
-  }
-
-  .collection-row-meta {
-    @apply mt-1 inline-flex flex-wrap items-center gap-2 text-sm font-semibold text-[#7f8898];
-  }
-
-  .collection-row-meta-label {
-    @apply rounded-full bg-white/70 px-2 py-1 text-[0.68rem] font-bold tracking-[0.08em] text-[#98a0af];
-  }
-
-  .collection-row-meta-value {
-    @apply text-sm font-semibold text-[#586173];
-  }
-
-  .collection-row-side {
-    @apply flex items-center justify-between gap-3 sm:justify-end;
-  }
-
-  .collection-row-amount-wrap {
-    @apply min-w-0;
-  }
-
-  .collection-row-amount-label {
-    @apply block text-[0.68rem] font-bold uppercase tracking-[0.08em] text-[#98a0af];
-  }
-
-  .collection-row-amount {
-    @apply mt-1 block font-display text-[1.7rem] font-bold leading-none text-[#1f2533];
-  }
-
-  .collection-row-amount-pending {
-    @apply text-[#ff6b2c];
-  }
-
-  /* Shared table and card views */
   .table-scroll {
     @apply hidden overflow-x-auto md:block;
   }
@@ -693,17 +619,6 @@
       @apply text-[1.8rem];
     }
 
-    .collection-row {
-      @apply gap-4 px-4 py-4;
-    }
-
-    .collection-row-side {
-      @apply items-end;
-    }
-
-    .collection-row-amount {
-      @apply text-[1.55rem];
-    }
   }
 
   @media (min-width: 1024px) {

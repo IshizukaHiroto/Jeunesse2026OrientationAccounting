@@ -527,7 +527,7 @@
     dom.summaryCollectionRate.textContent = formatPercent(overview.collectionRate);
     setProgress(dom.summaryCollectionBar, overview.collectionRate);
 
-    dom.summaryExpensesAmount.textContent = formatYen(summary.expensesTotal);
+    dom.summaryExpensesAmount.textContent = formatYen(overview.outflowTotal);
     dom.summaryExpensesMeta.textContent = "内訳 " + String(overview.outflowTypeCount) + "種類";
 
     dom.summaryRefundsAmount.textContent = formatYen(overview.pendingRefundTotal);
@@ -540,12 +540,12 @@
     setProgress(dom.summaryPaymentBar, overview.paymentRate);
 
     dom.summaryBalanceCollection.textContent = formatYen(summary.collectionTotal);
-    dom.summaryBalanceExpenses.textContent = formatYen(summary.expensesTotal);
-    dom.summaryAvailableBalance.textContent = formatYen(overview.availableAfterExpenses);
-    updateAvailableSurface(overview.availableAfterExpenses);
+    dom.summaryBalanceExpenses.textContent = formatYen(overview.outflowTotal);
+    dom.summaryAvailableBalance.textContent = formatYen(overview.currentBalance);
+    updateAvailableSurface(overview.currentBalance);
 
     dom.budgetExpensesAmount.textContent = formatYen(overview.spentInTarget);
-    dom.budgetBalanceAmount.textContent = formatYen(Math.max(overview.availableAfterExpenses, 0));
+    dom.budgetBalanceAmount.textContent = formatYen(overview.remainingTargetAmount);
     dom.budgetUnpaidAmount.textContent = formatYen(overview.unpaidTargetAmount);
     dom.budgetUsageRate.textContent = formatPercent(overview.usageRate);
   }
@@ -651,7 +651,7 @@
       button: dom.collectionMoreButton,
       count: dom.collectionCount,
       emptyMessage: getCollectionEmptyMessage(),
-      renderContent: function (visibleRows) { return renderCollectionLedger(visibleRows, amountPerMember); }
+      renderContent: function (visibleRows) { return renderCollectionContent(visibleRows, amountPerMember); }
     });
   }
 
@@ -689,11 +689,22 @@
     return state.filters.collectionPaidOnly ? EMPTY_MESSAGES.collectionPaidOnly : EMPTY_MESSAGES.collection;
   }
 
-  function renderCollectionLedger(rows, amountPerMember) {
+  function renderCollectionContent(rows, amountPerMember) {
     return (
-      '<div class="collection-ledger">' +
-      rows.map(function (row) { return renderCollectionRow(row, amountPerMember); }).join("") +
-      "</div>"
+      '<div class="table-wrapper">' +
+      '<div class="table-scroll"><table class="data-table">' +
+      "<thead><tr>" +
+      "<th>氏名</th>" +
+      '<th class="th-end">金額</th>' +
+      "<th>納入日</th>" +
+      '<th class="th-end">状態</th>' +
+      "</tr></thead>" +
+      "<tbody>" +
+      rows.map(function (row) { return renderCollectionDesktopRow(row, amountPerMember); }).join("") +
+      "</tbody></table></div>" +
+      '<div class="data-card-list">' +
+      rows.map(function (row) { return renderCollectionMobileCard(row, amountPerMember); }).join("") +
+      "</div></div>"
     );
   }
 
@@ -718,29 +729,33 @@
     );
   }
 
-  function renderCollectionRow(row, amountPerMember) {
+  function renderCollectionDesktopRow(row, amountPerMember) {
     var display = getCollectionDisplayState(row);
 
     return (
-      '<article class="' + display.rowClass + '">' +
-      '<div class="collection-row-main">' +
-      '<span class="collection-avatar" aria-hidden="true">' + escapeHtml(getNicknameInitial(display.nickname)) + "</span>" +
-      '<div class="collection-row-copy">' +
-      '<p class="collection-row-name">' + escapeHtml(display.nickname) + "</p>" +
-      '<div class="collection-row-meta">' +
-      '<span class="collection-row-meta-label">納入日</span>' +
-      '<span class="collection-row-meta-value">' + escapeHtml(display.confirmedDate) + "</span>" +
-      "</div>" +
-      "</div>" +
-      "</div>" +
-      '<div class="collection-row-side">' +
-      '<div class="collection-row-amount-wrap">' +
-      '<span class="collection-row-amount-label">金額</span>' +
-      '<strong class="' + display.amountClass + '">' + formatYen(amountPerMember) + "</strong>" +
-      "</div>" +
+      "<tr>" +
+      '<td class="data-table-name">' + escapeHtml(display.nickname) + "</td>" +
+      '<td class="text-right"><span class="' + display.tableAmountClass + '">' + formatYen(amountPerMember) + "</span></td>" +
+      "<td>" + escapeHtml(display.confirmedDate) + "</td>" +
+      '<td class="text-right"><span class="' + display.statusClass + '">' + display.statusLabel + "</span></td>" +
+      "</tr>"
+    );
+  }
+
+  function renderCollectionMobileCard(row, amountPerMember) {
+    var display = getCollectionDisplayState(row);
+
+    return (
+      '<article class="data-card-item">' +
+      '<div class="data-card-header">' +
+      '<p class="data-card-title">' + escapeHtml(display.nickname) + "</p>" +
       '<span class="' + display.statusClass + '">' + display.statusLabel + "</span>" +
       "</div>" +
-      "</article>"
+      '<div class="data-card-grid">' +
+      createMobileField("金額", formatYen(amountPerMember), display.cardAmountClass) +
+      createMobileField("納入日", escapeHtml(display.confirmedDate), "data-card-field-value") +
+      createMobileField("状態", display.statusLabel, "data-card-field-value") +
+      "</div></article>"
     );
   }
 
@@ -787,8 +802,10 @@
       confirmedDate: normalizeText(row && row.confirmedDate) || "--",
       statusClass: isPaid ? STATUS_PILL_CLASSES.success : STATUS_PILL_CLASSES.warning,
       statusLabel: isPaid ? "納入済" : "未納",
-      amountClass: isPaid ? "collection-row-amount" : "collection-row-amount collection-row-amount-pending",
-      rowClass: isPaid ? "collection-row collection-row-paid" : "collection-row collection-row-unpaid"
+      tableAmountClass: isPaid ? "data-table-amount" : "data-table-amount data-table-amount-pending",
+      cardAmountClass: isPaid
+        ? "data-card-field-value data-card-field-value-strong"
+        : "data-card-field-value data-card-field-value-strong data-table-amount-pending"
     };
   }
 
@@ -826,11 +843,6 @@
       '<p class="' + valueClass + '">' + value + "</p>" +
       "</div>"
     );
-  }
-
-  function getNicknameInitial(name) {
-    var normalized = normalizeText(name);
-    return normalized ? normalized.charAt(0) : "J";
   }
 
   function createTypePill(kind) {
@@ -902,7 +914,7 @@
 
   function toggleListLimit(key, totalRows) {
     if (state.limits[key] < totalRows) {
-      state.limits[key] = Math.min(totalRows, state.limits[key] + LIST_STEP);
+      state.limits[key] = totalRows;
       return;
     }
 
@@ -1025,7 +1037,21 @@
     var targetCollection = totalMembers * collectionAmountPerMember;
     var collectedInTarget = Math.min(summary.collectionTotal, targetCollection);
     var unpaidTargetAmount = Math.max(targetCollection - collectedInTarget, 0);
-    var spentInTarget = Math.min(summary.expensesTotal, collectedInTarget);
+    var outflowTotal = Math.max(
+      0,
+      normalizeNumber(summary.expensesTotal, 0) + normalizeNumber(summary.plannedReimbursementsTotal, 0)
+    );
+    var spentInTarget = Math.min(outflowTotal, collectedInTarget);
+    var outflowTypeCount = 0;
+
+    if (normalizeNumber(summary.expensesTotal, 0) > 0) {
+      outflowTypeCount += 1;
+    }
+
+    if (normalizeNumber(summary.plannedReimbursementsTotal, 0) > 0) {
+      outflowTypeCount += 1;
+    }
+
     return {
       summary: summary,
       collectionAmountPerMember: collectionAmountPerMember,
@@ -1037,8 +1063,10 @@
       remainingTargetAmount: Math.max(collectedInTarget - spentInTarget, 0),
       spentInTarget: spentInTarget,
       usageRate: targetCollection > 0 ? (spentInTarget / targetCollection) * 100 : 0,
+      outflowTotal: outflowTotal,
       availableAfterExpenses: summary.availableAfterExpenses,
-      outflowTypeCount: 0,
+      currentBalance: normalizeNumber(summary.currentBalance, summary.collectionTotal - outflowTotal),
+      outflowTypeCount: outflowTypeCount,
       pendingRefundCount: 0,
       pendingRefundTotal: 0
     };

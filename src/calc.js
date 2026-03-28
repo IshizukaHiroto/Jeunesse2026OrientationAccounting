@@ -402,6 +402,7 @@
     var collection = Array.isArray(data.collection) ? data.collection : [];
     var expenses = Array.isArray(data.expenses) ? data.expenses : [];
     var reimbursements = Array.isArray(data.reimbursements) ? data.reimbursements : [];
+    var balanceComposition = computeBalanceComposition(summary);
 
     var collectionAmountPerMember = toNumber(
       data.meta && data.meta.collectionAmountPerMember !== undefined
@@ -416,12 +417,17 @@
 
     var targetCollection = Math.max(0, totalMembers * collectionAmountPerMember);
     var collectionTotal = Math.max(0, toNumber(summary.collectionTotal));
-    var expensesTotal = Math.max(0, toNumber(summary.expensesTotal));
+    var outflowTotal = Math.max(0, toNumber(balanceComposition.outflowTotal));
     var availableAfterExpenses = toNumber(summary.availableAfterExpenses);
     var plannedReimbursementsTotal = Math.max(0, toNumber(summary.plannedReimbursementsTotal));
+    var currentBalance = toNumber(
+      summary.currentBalance !== undefined
+        ? summary.currentBalance
+        : collectionTotal - outflowTotal
+    );
     var collectedInTarget = targetCollection > 0 ? Math.min(collectionTotal, targetCollection) : 0;
     var unpaidTargetAmount = Math.max(targetCollection - collectedInTarget, 0);
-    var spentInTarget = targetCollection > 0 ? Math.min(expensesTotal, collectedInTarget) : 0;
+    var spentInTarget = targetCollection > 0 ? Math.min(outflowTotal, collectedInTarget) : 0;
     var remainingTargetAmount = targetCollection > 0 ? Math.max(collectedInTarget - spentInTarget, 0) : 0;
 
     var outflowTypeCount = 0;
@@ -447,7 +453,9 @@
       remainingTargetAmount: remainingTargetAmount,
       spentInTarget: spentInTarget,
       usageRate: targetCollection > 0 ? (spentInTarget / targetCollection) * 100 : 0,
+      outflowTotal: outflowTotal,
       availableAfterExpenses: availableAfterExpenses,
+      currentBalance: currentBalance,
       plannedReimbursementsTotal: plannedReimbursementsTotal,
       outflowTypeCount: outflowTypeCount,
       pendingRefundCount: pendingRefundRows.length,

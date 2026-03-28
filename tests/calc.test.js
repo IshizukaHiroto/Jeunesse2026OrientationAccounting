@@ -288,8 +288,11 @@ test("buildDashboardOverview derives target and progress values from public payl
   assert.ok(Math.abs(overview.collectionRate - 8000 / 120) < 1e-9);
   assert.ok(Math.abs(overview.paymentRate - 200 / 3) < 1e-9);
   assert.equal(overview.unpaidTargetAmount, 4000);
-  assert.equal(overview.spentInTarget, 6200);
-  assert.equal(overview.remainingTargetAmount, 1800);
+  assert.equal(overview.spentInTarget, 7400);
+  assert.equal(overview.remainingTargetAmount, 600);
+  assert.equal(overview.outflowTotal, 7400);
+  assert.equal(overview.currentBalance, 600);
+  assert.ok(Math.abs(overview.usageRate - 7400 / 120) < 1e-9);
   assert.equal(overview.outflowTypeCount, 2);
   assert.equal(overview.pendingRefundCount, 1);
   assert.equal(overview.pendingRefundTotal, 700);
