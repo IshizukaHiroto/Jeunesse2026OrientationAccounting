@@ -474,7 +474,7 @@
       return {
         id: row && row.id !== undefined ? row.id : "expense-" + String(index),
         kind: "expense",
-        nickname: "--",
+        nickname: "新歓係",
         typeLabel: "経費",
         description: normalize(row && row.description) || "内容未入力",
         amount: Math.max(0, toNumber(row && row.amount)),

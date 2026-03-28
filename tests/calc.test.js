@@ -345,7 +345,7 @@ test("createOutflowRows normalizes expenses and reimbursements without exposing 
   assert.deepEqual(rows[0], {
     id: 10,
     kind: "expense",
-    nickname: "--",
+    nickname: "新歓係",
     typeLabel: "経費",
     description: "名札",
     amount: 3200,
