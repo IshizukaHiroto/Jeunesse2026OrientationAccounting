@@ -607,6 +607,10 @@
   }
 
   function updateSettlementGuide(summary, isEmpty) {
+    if (!dom.settlementTitle || !dom.settlementBody || !dom.settlementFootnote) {
+      return;
+    }
+
     if (isEmpty) {
       dom.settlementTitle.textContent = "データ待機中";
       dom.settlementBody.textContent = "データを読み込むと精算方針を表示します。";
