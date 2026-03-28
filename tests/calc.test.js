@@ -290,9 +290,42 @@ test("buildDashboardOverview derives target and progress values from public payl
   assert.equal(overview.unpaidTargetAmount, 4000);
   assert.equal(overview.spentInTarget, 6200);
   assert.equal(overview.remainingTargetAmount, 1800);
-  assert.equal(overview.expenseCategoryCount, 2);
+  assert.equal(overview.outflowTypeCount, 2);
   assert.equal(overview.pendingRefundCount, 1);
   assert.equal(overview.pendingRefundTotal, 700);
+});
+
+test("buildDashboardOverview caps spent amount by collected target when collection lags behind expenses", () => {
+  const overview = buildDashboardOverview({
+    meta: {
+      collectionAmountPerMember: 4000
+    },
+    collection: [
+      { nickname: "A", paymentStatus: "済" },
+      { nickname: "B", paymentStatus: "未" },
+      { nickname: "C", paymentStatus: "未" }
+    ],
+    expenses: [
+      { amount: 5000 },
+      { amount: 3000 }
+    ],
+    reimbursements: [],
+    summary: {
+      paidMembers: 1,
+      unpaidMembers: 2,
+      collectionTotal: 4000,
+      expensesTotal: 8000,
+      plannedReimbursementsTotal: 0,
+      availableAfterExpenses: -4000,
+      currentBalance: -4000
+    }
+  });
+
+  assert.equal(overview.targetCollection, 12000);
+  assert.equal(overview.unpaidTargetAmount, 8000);
+  assert.equal(overview.spentInTarget, 4000);
+  assert.equal(overview.remainingTargetAmount, 0);
+  assert.ok(Math.abs(overview.usageRate - 100 / 3) < 1e-9);
 });
 
 test("createOutflowRows normalizes expenses and reimbursements without exposing private fields", () => {

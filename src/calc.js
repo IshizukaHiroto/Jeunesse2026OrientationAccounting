@@ -419,16 +419,17 @@
     var expensesTotal = Math.max(0, toNumber(summary.expensesTotal));
     var availableAfterExpenses = toNumber(summary.availableAfterExpenses);
     var plannedReimbursementsTotal = Math.max(0, toNumber(summary.plannedReimbursementsTotal));
-    var unpaidTargetAmount = Math.max(targetCollection - collectionTotal, 0);
-    var spentInTarget = targetCollection > 0 ? Math.min(expensesTotal, targetCollection) : 0;
-    var remainingTargetAmount = targetCollection > 0 ? Math.max(targetCollection - spentInTarget - unpaidTargetAmount, 0) : 0;
+    var collectedInTarget = targetCollection > 0 ? Math.min(collectionTotal, targetCollection) : 0;
+    var unpaidTargetAmount = Math.max(targetCollection - collectedInTarget, 0);
+    var spentInTarget = targetCollection > 0 ? Math.min(expensesTotal, collectedInTarget) : 0;
+    var remainingTargetAmount = targetCollection > 0 ? Math.max(collectedInTarget - spentInTarget, 0) : 0;
 
-    var expenseCategoryCount = 0;
+    var outflowTypeCount = 0;
     if (expenses.length > 0) {
-      expenseCategoryCount += 1;
+      outflowTypeCount += 1;
     }
     if (reimbursements.length > 0) {
-      expenseCategoryCount += 1;
+      outflowTypeCount += 1;
     }
 
     var pendingRefundRows = reimbursements.filter(function (row) {
@@ -448,7 +449,7 @@
       usageRate: targetCollection > 0 ? (spentInTarget / targetCollection) * 100 : 0,
       availableAfterExpenses: availableAfterExpenses,
       plannedReimbursementsTotal: plannedReimbursementsTotal,
-      expenseCategoryCount: expenseCategoryCount,
+      outflowTypeCount: outflowTypeCount,
       pendingRefundCount: pendingRefundRows.length,
       pendingRefundTotal: sumBy(pendingRefundRows, function (row) {
         return pickReimbursementAmount(row);

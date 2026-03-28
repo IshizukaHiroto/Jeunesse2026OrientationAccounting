@@ -558,9 +558,9 @@
     setProgress(dom.summaryCollectionBar, overview.collectionRate);
 
     dom.summaryExpensesAmount.textContent = formatYen(summary.expensesTotal);
-    dom.summaryExpensesMeta.textContent = String(overview.expenseCategoryCount) + "区分の支出内訳";
+    dom.summaryExpensesMeta.textContent = String(overview.outflowTypeCount) + "種別の支出内訳";
 
-    dom.summaryRefundsAmount.textContent = formatYen(summary.plannedReimbursementsTotal);
+    dom.summaryRefundsAmount.textContent = formatYen(overview.pendingRefundTotal);
     dom.summaryRefundsMeta.textContent = String(overview.pendingRefundCount) + "件の未返金立替";
 
     dom.summaryPaymentMain.textContent =
@@ -1224,8 +1224,9 @@
     var totalMembers = Array.isArray(data.collection) ? data.collection.length : Math.max(0, summary.paidMembers + summary.unpaidMembers);
     var collectionAmountPerMember = summary.collectionAmountPerMember || 0;
     var targetCollection = totalMembers * collectionAmountPerMember;
-    var unpaidTargetAmount = Math.max(targetCollection - summary.collectionTotal, 0);
-    var spentInTarget = Math.min(summary.expensesTotal, targetCollection);
+    var collectedInTarget = Math.min(summary.collectionTotal, targetCollection);
+    var unpaidTargetAmount = Math.max(targetCollection - collectedInTarget, 0);
+    var spentInTarget = Math.min(summary.expensesTotal, collectedInTarget);
     return {
       summary: summary,
       collectionAmountPerMember: collectionAmountPerMember,
@@ -1234,12 +1235,13 @@
       collectionRate: targetCollection > 0 ? (summary.collectionTotal / targetCollection) * 100 : 0,
       paymentRate: totalMembers > 0 ? (summary.paidMembers / totalMembers) * 100 : 0,
       unpaidTargetAmount: unpaidTargetAmount,
-      remainingTargetAmount: Math.max(targetCollection - spentInTarget - unpaidTargetAmount, 0),
+      remainingTargetAmount: Math.max(collectedInTarget - spentInTarget, 0),
       spentInTarget: spentInTarget,
       usageRate: targetCollection > 0 ? (spentInTarget / targetCollection) * 100 : 0,
       availableAfterExpenses: summary.availableAfterExpenses,
-      expenseCategoryCount: 0,
-      pendingRefundCount: 0
+      outflowTypeCount: 0,
+      pendingRefundCount: 0,
+      pendingRefundTotal: 0
     };
   }
 
