@@ -3,7 +3,7 @@
 
   var LIST_STEP = 5;
   var DEFAULT_REFUND_CAP = 700;
-  var VIEW_IDS = ["summary", "collection", "outflow", "refund"];
+  var VIEW_IDS = ["summary", "collection", "outflow"];
   var config = window.APP_CONFIG || {};
   var calc = window.AccountingCalc;
   var POLLING_MS = normalizeNumber(config.POLLING_MS, 60000);
@@ -22,28 +22,23 @@
     pollingTimerId: null,
     limits: {
       collection: LIST_STEP,
-      outflow: LIST_STEP,
-      refund: LIST_STEP
+      outflow: LIST_STEP
     },
     filters: {
       collectionPaidOnly: false,
-      outflowType: "all",
-      refundStatus: "all"
+      outflowType: "all"
     },
     sort: {
-      collection: "asc",
-      refund: "asc"
+      collection: "asc"
     }
   };
 
   var dom = {
     refreshButton: document.getElementById("manual-refresh-btn"),
-    refreshLabel: document.getElementById("refresh-label"),
-    syncChip: document.getElementById("sync-chip"),
+    refreshLoading: document.getElementById("manual-refresh-loading"),
     updatedAt: document.getElementById("updated-at"),
     updatedAtSidebar: document.getElementById("updated-at-sidebar"),
     syncBanner: document.getElementById("sync-banner"),
-    loadingNotice: document.getElementById("loading-notice"),
     summaryCollectionAmount: document.getElementById("summary-collection-amount"),
     summaryCollectionTarget: document.getElementById("summary-collection-target"),
     summaryCollectionRate: document.getElementById("summary-collection-rate"),
@@ -72,9 +67,6 @@
     outflowTable: document.getElementById("outflow-table"),
     outflowMoreButton: document.getElementById("outflow-more-btn"),
     outflowCount: document.getElementById("outflow-count"),
-    refundTable: document.getElementById("refund-table"),
-    refundMoreButton: document.getElementById("refund-more-btn"),
-    refundCount: document.getElementById("refund-count"),
     collectionFilterToggle: document.getElementById("collection-filter-toggle"),
     collectionFilterPanel: document.getElementById("collection-filter-panel"),
     collectionFilterSortAsc: document.getElementById("collection-filter-sort-asc"),
@@ -85,27 +77,18 @@
     outflowFilterAll: document.getElementById("outflow-filter-all"),
     outflowFilterExpense: document.getElementById("outflow-filter-expense"),
     outflowFilterReimbursement: document.getElementById("outflow-filter-reimbursement"),
-    refundFilterToggle: document.getElementById("refund-filter-toggle"),
-    refundFilterPanel: document.getElementById("refund-filter-panel"),
-    refundFilterSortAsc: document.getElementById("refund-filter-sort-asc"),
-    refundFilterSortDesc: document.getElementById("refund-filter-sort-desc"),
-    refundFilterStatusAll: document.getElementById("refund-filter-status-all"),
-    refundFilterStatusPending: document.getElementById("refund-filter-status-pending"),
-    refundFilterStatusDone: document.getElementById("refund-filter-status-done"),
     viewButtons: document.querySelectorAll("[data-view][role='tab']"),
     viewPanels: document.querySelectorAll("[data-view-panel]")
   };
 
   var filterToggles = {
     collection: dom.collectionFilterToggle,
-    outflow: dom.outflowFilterToggle,
-    refund: dom.refundFilterToggle
+    outflow: dom.outflowFilterToggle
   };
 
   var filterPanels = {
     collection: dom.collectionFilterPanel,
-    outflow: dom.outflowFilterPanel,
-    refund: dom.refundFilterPanel
+    outflow: dom.outflowFilterPanel
   };
 
   var chartPalette = readChartPalette();
@@ -120,7 +103,7 @@
   function attachEvents() {
     if (dom.refreshButton) {
       dom.refreshButton.addEventListener("click", function () {
-        refreshData({ source: "manual", force: true });
+        refreshData({ source: "manual" });
       });
     }
 
@@ -140,17 +123,8 @@
       });
     }
 
-    if (dom.refundMoreButton) {
-      dom.refundMoreButton.addEventListener("click", function () {
-        var totalRows = getVisibleRefundRows((state.latestPayload && state.latestPayload.reimbursements) || []).length;
-        toggleListLimit("refund", totalRows);
-        renderRefundTable((state.latestPayload && state.latestPayload.reimbursements) || []);
-      });
-    }
-
     bindFilterToggle("collection");
     bindFilterToggle("outflow");
-    bindFilterToggle("refund");
 
     bindPressedClick(dom.collectionFilterSortAsc, function () {
       setSortDirection("collection", "asc");
@@ -173,22 +147,6 @@
     });
     bindPressedClick(dom.outflowFilterReimbursement, function () {
       setOutflowType("reimbursement");
-    });
-
-    bindPressedClick(dom.refundFilterSortAsc, function () {
-      setSortDirection("refund", "asc");
-    });
-    bindPressedClick(dom.refundFilterSortDesc, function () {
-      setSortDirection("refund", "desc");
-    });
-    bindPressedClick(dom.refundFilterStatusAll, function () {
-      setRefundStatus("all");
-    });
-    bindPressedClick(dom.refundFilterStatusPending, function () {
-      setRefundStatus("pending");
-    });
-    bindPressedClick(dom.refundFilterStatusDone, function () {
-      setRefundStatus("done");
     });
 
     Array.prototype.forEach.call(dom.viewButtons, function (button) {
@@ -320,6 +278,10 @@
 
   function setSortDirection(key, direction) {
     var normalized = direction === "desc" ? "desc" : "asc";
+    if (key !== "collection") {
+      return;
+    }
+
     if (state.sort[key] === normalized) {
       return;
     }
@@ -328,12 +290,7 @@
     state.limits[key] = LIST_STEP;
     updateFilterControlUI();
 
-    if (key === "collection") {
-      renderCollectionTable((state.latestPayload && state.latestPayload.collection) || [], getCollectionAmountPerMember());
-      return;
-    }
-
-    renderRefundTable((state.latestPayload && state.latestPayload.reimbursements) || []);
+    renderCollectionTable((state.latestPayload && state.latestPayload.collection) || [], getCollectionAmountPerMember());
   }
 
   function setOutflowType(type) {
@@ -347,21 +304,9 @@
     renderOutflowTable(getOutflowRows());
   }
 
-  function setRefundStatus(type) {
-    if (state.filters.refundStatus === type) {
-      return;
-    }
-
-    state.filters.refundStatus = type;
-    state.limits.refund = LIST_STEP;
-    updateRefundFilterUI();
-    renderRefundTable((state.latestPayload && state.latestPayload.reimbursements) || []);
-  }
-
   function updateFilterControlUI() {
     updateCollectionFilterUI();
     updateOutflowFilterUI();
-    updateRefundFilterUI();
   }
 
   function updateCollectionFilterUI() {
@@ -374,14 +319,6 @@
     setPressedButtonState(dom.outflowFilterAll, state.filters.outflowType === "all");
     setPressedButtonState(dom.outflowFilterExpense, state.filters.outflowType === "expense");
     setPressedButtonState(dom.outflowFilterReimbursement, state.filters.outflowType === "reimbursement");
-  }
-
-  function updateRefundFilterUI() {
-    setPressedButtonState(dom.refundFilterSortAsc, state.sort.refund === "asc");
-    setPressedButtonState(dom.refundFilterSortDesc, state.sort.refund === "desc");
-    setPressedButtonState(dom.refundFilterStatusAll, state.filters.refundStatus === "all");
-    setPressedButtonState(dom.refundFilterStatusPending, state.filters.refundStatus === "pending");
-    setPressedButtonState(dom.refundFilterStatusDone, state.filters.refundStatus === "done");
   }
 
   function setPressedButtonState(button, isActive) {
@@ -452,9 +389,8 @@
 
   async function refreshData(options) {
     var source = options && options.source ? options.source : "unknown";
-    var force = Boolean(options && options.force);
 
-    if (state.isRefreshing && !force) {
+    if (state.isRefreshing) {
       return;
     }
 
@@ -478,7 +414,7 @@
 
       state.latestPayload = payload;
       render(payload);
-      setSyncState("ok", source === "manual" ? "手動更新が完了しました。" : "最新データを表示しています。");
+      setSyncState("ok", source === "manual" ? "手動更新が完了しました。" : "");
     } catch (error) {
       if (state.latestPayload) {
         render(state.latestPayload);
@@ -502,7 +438,6 @@
     renderSummary(overview, false);
     renderCollectionTable(payload.collection || [], overview.collectionAmountPerMember);
     renderOutflowTable(getOutflowRows());
-    renderRefundTable(payload.reimbursements || []);
 
     if (state.currentView === "summary") {
       renderUsageChart(overview);
@@ -537,7 +472,6 @@
     renderSummary(overview, true);
     renderCollectionTable([], 0);
     renderOutflowTable([]);
-    renderRefundTable([]);
     renderUsageChart(null);
   }
 
@@ -678,24 +612,13 @@
       button: dom.collectionMoreButton,
       count: dom.collectionCount,
       emptyMessage: state.filters.collectionPaidOnly
-        ? "納入済みの歳入データはまだありません。"
-        : "歳入データはまだありません。",
-      renderDesktop: function (visibleRows) {
+        ? "納入済みの収入データはまだありません。"
+        : "収入データはまだありません。",
+      renderContent: function (visibleRows) {
         return (
-          '<div class="table-wrapper">' +
-          '<div class="table-scroll"><table class="data-table">' +
-          "<thead><tr>" +
-          "<th>氏名</th>" +
-          '<th class="th-end">金額</th>' +
-          "<th>納入日</th>" +
-          '<th class="th-end">状態</th>' +
-          "</tr></thead>" +
-          "<tbody>" +
-          visibleRows.map(function (row) { return renderCollectionDesktopRow(row, amountPerMember); }).join("") +
-          "</tbody></table></div>" +
-          '<div class="data-card-list">' +
-          visibleRows.map(function (row) { return renderCollectionMobileCard(row, amountPerMember); }).join("") +
-          "</div></div>"
+          '<div class="collection-ledger">' +
+          visibleRows.map(function (row) { return renderCollectionRow(row, amountPerMember); }).join("") +
+          "</div>"
         );
       }
     });
@@ -710,7 +633,7 @@
       button: dom.outflowMoreButton,
       count: dom.outflowCount,
       emptyMessage: "表示できる支出データはまだありません。",
-      renderDesktop: function (visibleRows) {
+      renderContent: function (visibleRows) {
         return (
           '<div class="table-wrapper">' +
           '<div class="table-scroll"><table class="data-table">' +
@@ -733,39 +656,6 @@
     });
   }
 
-  function renderRefundTable(rows) {
-    var normalizedRows = getVisibleRefundRows(rows);
-    renderTableState({
-      rows: normalizedRows,
-      limitKey: "refund",
-      container: dom.refundTable,
-      button: dom.refundMoreButton,
-      count: dom.refundCount,
-      emptyMessage: state.filters.refundStatus === "all"
-        ? "返金対象データはまだありません。"
-        : "条件に一致する返金データはまだありません。",
-      renderDesktop: function (visibleRows) {
-        return (
-          '<div class="table-wrapper">' +
-          '<div class="table-scroll"><table class="data-table">' +
-          "<thead><tr>" +
-          "<th>氏名</th>" +
-          "<th>種別</th>" +
-          "<th>項目</th>" +
-          '<th class="th-end">返金額</th>' +
-          '<th class="th-end">ステータス</th>' +
-          "</tr></thead>" +
-          "<tbody>" +
-          visibleRows.map(renderRefundDesktopRow).join("") +
-          "</tbody></table></div>" +
-          '<div class="data-card-list">' +
-          visibleRows.map(renderRefundMobileCard).join("") +
-          "</div></div>"
-        );
-      }
-    });
-  }
-
   function renderTableState(params) {
     var rows = Array.isArray(params.rows) ? params.rows : [];
     var limit = state.limits[params.limitKey];
@@ -779,43 +669,39 @@
       return;
     }
 
-    params.container.innerHTML = params.renderDesktop(visibleRows);
+    params.container.innerHTML = params.renderContent(visibleRows);
     updateMoreButton(params.button, limit, rows.length);
   }
 
-  function renderCollectionDesktopRow(row, amountPerMember) {
+  function renderCollectionRow(row, amountPerMember) {
+    var nickname = normalizeText(row && row.nickname) || "名前未設定";
+    var confirmedDate = normalizeText(row && row.confirmedDate) || "--";
     var isPaid = normalizeText(row && row.paymentStatus) === "済";
     var statusClass = isPaid ? "status-pill status-pill-success" : "status-pill status-pill-warning";
     var statusLabel = isPaid ? "納入済" : "未納";
-    var amountClass = isPaid ? "data-table-amount" : "data-table-amount data-table-amount-pending";
+    var amountClass = isPaid ? "collection-row-amount" : "collection-row-amount collection-row-amount-pending";
+    var rowClass = isPaid ? "collection-row collection-row-paid" : "collection-row collection-row-unpaid";
 
     return (
-      "<tr>" +
-      '<td class="data-table-name">' + escapeHtml(normalizeText(row && row.nickname) || "名前未設定") + "</td>" +
-      '<td class="text-right"><span class="' + amountClass + '">' + formatYen(amountPerMember) + "</span></td>" +
-      "<td>" + escapeHtml(normalizeText(row && row.confirmedDate) || "-") + "</td>" +
-      '<td class="text-right"><span class="' + statusClass + '">' + statusLabel + "</span></td>" +
-      "</tr>"
-    );
-  }
-
-  function renderCollectionMobileCard(row, amountPerMember) {
-    var isPaid = normalizeText(row && row.paymentStatus) === "済";
-    var statusClass = isPaid ? "status-pill status-pill-success" : "status-pill status-pill-warning";
-    var statusLabel = isPaid ? "納入済" : "未納";
-    var amountClass = isPaid ? "data-card-field-value data-card-field-value-strong" : "data-card-field-value data-card-field-value-strong data-table-amount-pending";
-
-    return (
-      '<article class="data-card-item">' +
-      '<div class="data-card-header">' +
-      '<p class="data-card-title">' + escapeHtml(normalizeText(row && row.nickname) || "名前未設定") + "</p>" +
+      '<article class="' + rowClass + '">' +
+      '<div class="collection-row-main">' +
+      '<span class="collection-avatar" aria-hidden="true">' + escapeHtml(getNicknameInitial(nickname)) + "</span>" +
+      '<div class="collection-row-copy">' +
+      '<p class="collection-row-name">' + escapeHtml(nickname) + "</p>" +
+      '<div class="collection-row-meta">' +
+      '<span class="collection-row-meta-label">納入日</span>' +
+      '<span class="collection-row-meta-value">' + escapeHtml(confirmedDate) + "</span>" +
+      "</div>" +
+      "</div>" +
+      "</div>" +
+      '<div class="collection-row-side">' +
+      '<div class="collection-row-amount-wrap">' +
+      '<span class="collection-row-amount-label">金額</span>' +
+      '<strong class="' + amountClass + '">' + formatYen(amountPerMember) + "</strong>" +
+      "</div>" +
       '<span class="' + statusClass + '">' + statusLabel + "</span>" +
       "</div>" +
-      '<div class="data-card-grid">' +
-      createMobileField("金額", formatYen(amountPerMember), amountClass) +
-      createMobileField("納入日", escapeHtml(normalizeText(row && row.confirmedDate) || "-"), "data-card-field-value") +
-      createMobileField("状態", statusLabel, "data-card-field-value") +
-      "</div></article>"
+      "</article>"
     );
   }
 
@@ -827,9 +713,10 @@
     var amountClass = row.kind === "reimbursement" && row.statusTone === "pending"
       ? "data-table-amount data-table-amount-pending"
       : "data-table-amount";
+    var rowClass = row.kind === "reimbursement" ? "data-table-row data-table-row-reimbursement" : "data-table-row data-table-row-expense";
 
     return (
-      "<tr>" +
+      '<tr class="' + rowClass + '">' +
       '<td class="' + (nickname === "--" ? "data-table-muted" : "data-table-name") + '">' + escapeHtml(nickname) + "</td>" +
       "<td>" + createTypePill(row.kind) + "</td>" +
       "<td>" + escapeHtml(row.description) + "</td>" +
@@ -846,9 +733,12 @@
     var amountClass = row.kind === "reimbursement" && row.statusTone === "pending"
       ? "data-card-field-value data-card-field-value-strong data-table-amount-pending"
       : "data-card-field-value data-card-field-value-strong";
+    var cardClass = row.kind === "reimbursement"
+      ? "data-card-item data-card-item-reimbursement"
+      : "data-card-item data-card-item-expense";
 
     return (
-      '<article class="data-card-item">' +
+      '<article class="' + cardClass + '">' +
       '<div class="data-card-header">' +
       '<div>' +
       '<p class="data-card-title">' + escapeHtml(row.description) + "</p>" +
@@ -864,45 +754,6 @@
     );
   }
 
-  function renderRefundDesktopRow(row) {
-    var normalized = normalizeRefundRow(row);
-    var amountClass = normalized.statusTone === "pending"
-      ? "data-table-amount data-table-amount-pending"
-      : "data-table-amount";
-
-    return (
-      "<tr>" +
-      '<td class="data-table-name">' + escapeHtml(normalized.nickname) + "</td>" +
-      "<td>" + createTypePill("reimbursement") + "</td>" +
-      "<td>" + escapeHtml(normalized.description) + "</td>" +
-      '<td class="text-right"><span class="' + amountClass + '">' + formatYen(normalized.reimbursementAmount) + "</span></td>" +
-      '<td class="text-right"><span class="' + getStatusPillClass(normalized.statusTone) + '">' + escapeHtml(normalized.refundStatus) + "</span></td>" +
-      "</tr>"
-    );
-  }
-
-  function renderRefundMobileCard(row) {
-    var normalized = normalizeRefundRow(row);
-    var amountClass = normalized.statusTone === "pending"
-      ? "data-card-field-value data-card-field-value-strong data-table-amount-pending"
-      : "data-card-field-value data-card-field-value-strong";
-
-    return (
-      '<article class="data-card-item">' +
-      '<div class="data-card-header">' +
-      '<div>' +
-      '<p class="data-card-title">' + escapeHtml(normalized.nickname) + "</p>" +
-      '<p class="mt-1 text-sm font-semibold text-[#8e97a8]">' + escapeHtml(normalized.description) + "</p>" +
-      "</div>" +
-      '<span class="' + getStatusPillClass(normalized.statusTone) + '">' + escapeHtml(normalized.refundStatus) + "</span>" +
-      "</div>" +
-      '<div class="data-card-grid">' +
-      createMobileField("種別", "立替", "data-card-field-value") +
-      createMobileField("返金額", formatYen(normalized.reimbursementAmount), amountClass) +
-      "</div></article>"
-    );
-  }
-
   function createMobileField(label, value, valueClass) {
     return (
       '<div class="data-card-field">' +
@@ -912,9 +763,14 @@
     );
   }
 
+  function getNicknameInitial(name) {
+    var normalized = normalizeText(name);
+    return normalized ? normalized.charAt(0) : "J";
+  }
+
   function createTypePill(kind) {
     var typeClass = "type-pill type-pill-income";
-    var label = "歳入";
+    var label = "収入";
 
     if (kind === "expense") {
       typeClass = "type-pill type-pill-expense";
@@ -973,24 +829,6 @@
     return normalizedRows;
   }
 
-  function getVisibleRefundRows(rows) {
-    var normalizedRows = sortByNickname(Array.isArray(rows) ? rows : [], state.sort.refund);
-
-    if (state.filters.refundStatus === "pending") {
-      return normalizedRows.filter(function (row) {
-        return normalizeText(row && row.refundStatus) !== "返金済";
-      });
-    }
-
-    if (state.filters.refundStatus === "done") {
-      return normalizedRows.filter(function (row) {
-        return normalizeText(row && row.refundStatus) === "返金済";
-      });
-    }
-
-    return normalizedRows;
-  }
-
   function sortByNickname(rows, direction) {
     if (calc.sortByNickname) {
       return calc.sortByNickname(rows, direction);
@@ -1012,17 +850,6 @@
     }
 
     return calc.createOutflowRows ? calc.createOutflowRows(state.latestPayload) : [];
-  }
-
-  function normalizeRefundRow(row) {
-    var status = normalizeText(row && row.refundStatus) || "未返金";
-    return {
-      nickname: normalizeText(row && row.nickname) || "名前未設定",
-      description: normalizeText(row && row.description) || "内容未入力",
-      reimbursementAmount: Math.max(0, calc.toNumber ? calc.toNumber(row && row.reimbursementAmount) : 0),
-      refundStatus: status,
-      statusTone: status === "返金済" ? "success" : "pending"
-    };
   }
 
   function toggleListLimit(key, totalRows) {
@@ -1052,32 +879,16 @@
       dom.refreshButton.disabled = isLoading;
       dom.refreshButton.dataset.loading = isLoading ? "true" : "false";
       dom.refreshButton.setAttribute("aria-busy", isLoading ? "true" : "false");
+      dom.refreshButton.classList.toggle("hidden", isLoading);
     }
 
-    if (dom.refreshLabel) {
-      dom.refreshLabel.textContent = isLoading ? "更新中..." : "更新";
-    }
-
-    if (dom.loadingNotice) {
-      if (isLoading) {
-        dom.loadingNotice.classList.remove("hidden");
-        dom.loadingNotice.textContent = state.latestPayload
-          ? "最新データを確認しています。現在の表示は前回更新分です。"
-          : "データを読み込んでいます。数秒お待ちください。";
-      } else {
-        dom.loadingNotice.classList.add("hidden");
-        dom.loadingNotice.textContent = "";
-      }
-    }
-
-    if (isLoading) {
-      setSyncChipStatus("ok", "更新中");
+    if (dom.refreshLoading) {
+      dom.refreshLoading.classList.toggle("hidden", !isLoading);
     }
   }
 
   function setSyncState(type, message) {
     if (type === "ok") {
-      setSyncChipStatus("ok", "更新済み");
       if (dom.syncBanner) {
         dom.syncBanner.classList.add("hidden");
         dom.syncBanner.textContent = "";
@@ -1085,20 +896,10 @@
       return;
     }
 
-    setSyncChipStatus("warn", "要確認");
     if (dom.syncBanner) {
       dom.syncBanner.classList.remove("hidden");
       dom.syncBanner.textContent = message;
     }
-  }
-
-  function setSyncChipStatus(type, label) {
-    if (!dom.syncChip) {
-      return;
-    }
-
-    dom.syncChip.className = "sync-chip " + (type === "warn" ? "sync-chip-warn" : "sync-chip-ok");
-    dom.syncChip.textContent = label;
   }
 
   function renderUpdatedAt(value) {

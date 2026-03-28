@@ -93,26 +93,6 @@
               </span>
               <span>支出</span>
             </button>
-            <button
-              type="button"
-              id="desktop-tab-refund"
-              class="sidebar-tab"
-              data-view="refund"
-              role="tab"
-              aria-controls="view-panel-refund"
-              aria-selected="false"
-              tabindex="-1"
-            >
-              <span class="sidebar-tab-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4.5 12a7.5 7.5 0 0 1 12.8-5.3" />
-                  <path d="M18.3 3.7v4.7h-4.7" />
-                  <path d="M19.5 12a7.5 7.5 0 0 1-12.8 5.3" />
-                  <path d="M5.7 20.3v-4.7h4.7" />
-                </svg>
-              </span>
-              <span>返金状況</span>
-            </button>
           </nav>
         </div>
 
@@ -128,16 +108,26 @@
             <h1 class="content-title">2026年度 新歓会計管理</h1>
           </div>
           <div class="content-utilities">
-            <span id="sync-chip" class="sync-chip sync-chip-ok">準備中</span>
             <p class="content-updated-mobile lg:hidden">最終更新: <span id="updated-at">--</span></p>
-            <button
-              id="manual-refresh-btn"
-              class="refresh-button"
-              data-loading="false"
-              aria-busy="false"
-            >
-              <span id="refresh-label">更新</span>
-            </button>
+            <div class="refresh-control" aria-live="polite">
+              <button
+                id="manual-refresh-btn"
+                class="refresh-button"
+                data-loading="false"
+                aria-busy="false"
+              >
+                更新
+              </button>
+              <span
+                id="manual-refresh-loading"
+                class="refresh-static hidden"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                更新中...
+              </span>
+            </div>
           </div>
         </header>
 
@@ -148,8 +138,6 @@
           aria-live="polite"
           aria-atomic="true"
         ></section>
-        <section id="loading-notice" class="loading-notice hidden" aria-live="polite"></section>
-
         <section
           id="view-panel-summary"
           class="view-panel"
@@ -290,6 +278,7 @@
               </div>
             </article>
           </section>
+        </section>
 
         <section
           id="view-panel-collection"
@@ -302,7 +291,7 @@
         >
           <div class="view-header">
             <div>
-              <h2 class="view-title">歳入</h2>
+              <h2 class="view-title">収入</h2>
               <p class="view-copy">会費の納入状況を一覧で確認できます。</p>
             </div>
             <div class="filter-shell">
@@ -323,7 +312,7 @@
               <div id="collection-filter-panel" class="filter-panel hidden">
                 <div class="filter-group">
                   <p class="filter-group-label">並び順</p>
-                  <div class="filter-chip-row" role="group" aria-label="歳入の並び順">
+                  <div class="filter-chip-row" role="group" aria-label="収入の並び順">
                     <button id="collection-filter-sort-asc" type="button" class="filter-chip" aria-pressed="true">昇順</button>
                     <button id="collection-filter-sort-desc" type="button" class="filter-chip" aria-pressed="false">降順</button>
                   </div>
@@ -397,64 +386,6 @@
             </div>
           </article>
         </section>
-
-        <section
-          id="view-panel-refund"
-          class="view-panel hidden"
-          data-view-panel="refund"
-          role="tabpanel"
-          aria-labelledby="desktop-tab-refund mobile-tab-refund"
-          aria-hidden="true"
-          tabindex="-1"
-        >
-          <div class="view-header">
-            <div>
-              <h2 class="view-title">返金状況</h2>
-              <p class="view-copy">立替の返金状況を一覧で確認できます。</p>
-            </div>
-            <div class="filter-shell">
-              <button
-                id="refund-filter-toggle"
-                type="button"
-                class="filter-button"
-                aria-expanded="false"
-                aria-controls="refund-filter-panel"
-              >
-                <svg class="filter-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M4 6h16" />
-                  <path d="M7 12h10" />
-                  <path d="M10 18h4" />
-                </svg>
-                フィルター
-              </button>
-              <div id="refund-filter-panel" class="filter-panel hidden">
-                <div class="filter-group">
-                  <p class="filter-group-label">並び順</p>
-                  <div class="filter-chip-row" role="group" aria-label="返金状況の並び順">
-                    <button id="refund-filter-sort-asc" type="button" class="filter-chip" aria-pressed="true">昇順</button>
-                    <button id="refund-filter-sort-desc" type="button" class="filter-chip" aria-pressed="false">降順</button>
-                  </div>
-                </div>
-                <div class="filter-group">
-                  <p class="filter-group-label">ステータス</p>
-                  <div class="filter-chip-row" role="group" aria-label="返金状況の絞り込み">
-                    <button id="refund-filter-status-all" type="button" class="filter-chip" aria-pressed="true">すべて</button>
-                    <button id="refund-filter-status-pending" type="button" class="filter-chip" aria-pressed="false">未返金</button>
-                    <button id="refund-filter-status-done" type="button" class="filter-chip" aria-pressed="false">返金済</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <article class="table-card">
-            <div id="refund-table" class="table-region"></div>
-            <div class="table-card-footer">
-              <button id="refund-more-btn" class="table-more-button hidden">もっと見る</button>
-              <p id="refund-count" class="table-count">0件 表示中 / 全0件</p>
-            </div>
-          </article>
-        </section>
       </main>
     </div>
 
@@ -498,7 +429,7 @@
             <path d="M17.5 5V3.7" />
           </svg>
         </span>
-        <span>歳入</span>
+        <span>収入</span>
       </button>
       <button
         type="button"
@@ -517,26 +448,6 @@
           </svg>
         </span>
         <span>支出</span>
-      </button>
-      <button
-        type="button"
-        id="mobile-tab-refund"
-        class="mobile-tab-item"
-        data-view="refund"
-        role="tab"
-        aria-controls="view-panel-refund"
-        aria-selected="false"
-        tabindex="-1"
-      >
-        <span class="mobile-tab-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4.5 12a7.5 7.5 0 0 1 12.8-5.3" />
-            <path d="M18.3 3.7v4.7h-4.7" />
-            <path d="M19.5 12a7.5 7.5 0 0 1-12.8 5.3" />
-            <path d="M5.7 20.3v-4.7h4.7" />
-          </svg>
-        </span>
-        <span>返金</span>
       </button>
     </nav>
 
