@@ -1,11 +1,11 @@
 # ダッシュボード運用手順
 
-図で全体を確認したい場合は、先に [`docs/visual-guide.md`](/Users/hirotoishizuka/Desktop/Jeunesse2026OrientationAccounting/docs/visual-guide.md) を参照してください。
+図で全体を確認したい場合は、先に [`visual-guide.md`](./visual-guide.md) を参照してください。
 
 ## 1. 初期設定
-1. [`assets/config.js`](/Users/hirotoishizuka/Desktop/Jeunesse2026OrientationAccounting/assets/config.js) の `GAS_ENDPOINT` を本番URLに更新。
+1. [`assets/config.js`](../assets/config.js) の `GAS_ENDPOINT` を本番URLに更新。
 2. `POLLING_MS` は既定値 `60000`（60秒）を維持。
-3. CSS更新時は `npm run build:css` を実行して [`assets/styles.css`](/Users/hirotoishizuka/Desktop/Jeunesse2026OrientationAccounting/assets/styles.css) を再生成。
+3. CSS更新時は `npm run build:css` を実行して [`assets/styles.css`](../assets/styles.css) を再生成。
 
 ## 2. ローカル確認
 1. `npm install`
@@ -25,14 +25,15 @@
 4. 公開UIには管理者向けの確認先を出さず、詳細な障害切り分けは運用手順で行う。
 
 ## 5. 画面操作
-1. PCでは左サイドバー、スマホでは下部タブで `サマリー / 集金 / 出費` を切り替える。
-2. `出費` は `経費` と `立替返金予定` をまとめた上位カテゴリで、画面内では `経費明細` と `立替一覧` を続けて確認する。
-3. 集金画面は `支払い済みだけ` ボタンで絞り込みでき、`昇順 / 降順` ボタンで名前順ソートできる（初期は絞り込みなし・昇順）。
-4. 出費画面の立替一覧は `昇順 / 降順` ボタンで名前順ソートできる（初期は昇順）。
-5. 一覧は上位5件から表示され、`もっと見る` で段階表示する。
-6. 返金上限（新入生1人あたり）はサマリーの精算ルールと出費画面の立替欄説明に表示される。表示値は `meta.refundCapPerFreshman` を優先し、欠損・不正時は700円を表示する。
+1. PCでは左サイドバー、スマホでは下部タブで `サマリー / 歳入 / 支出 / 返金状況` を切り替える。
+2. `サマリー` は4つのKPIカード、`全体収支状況`、`予算使用状況`、精算ルールを上から確認する。
+3. `歳入` は `氏名 / 金額 / 納入日 / 状態` を表示し、`フィルター` から `昇順 / 降順` と `納入済みだけ表示` を切り替える。
+4. `支出` は `経費記録` 由来の `経費` と `立替返金管理` 由来の `立替` を同じ一覧で確認し、`フィルター` から `すべて / 経費 / 立替` を切り替える。公開JSONにない値は `--` を表示する。
+5. `返金状況` は `氏名 / 種別 / 項目 / 返金額 / ステータス` を表示し、`種別` は `立替` 固定で表示する。`フィルター` から `昇順 / 降順` と `すべて / 未返金 / 返金済` を切り替える。
+6. 一覧は初期5件から表示され、`もっと見る` で段階表示し、最後まで開いた状態でもう一度押すと折りたたむ。
+7. 返金上限（新入生1人あたり）はサマリーの精算ルールと支出画面の補足に表示される。表示値は `meta.refundCapPerFreshman` を優先し、欠損・不正時は700円を表示する。
 
 ## 6. 障害時対応
 1. バナー表示が続く場合、管理者はまずGAS URLと公開権限を確認する。公開UIにはこれらの内部確認先を表示しない。
-2. シート名変更時は [`gas/Code.gs`](/Users/hirotoishizuka/Desktop/Jeunesse2026OrientationAccounting/gas/Code.gs) の候補名を更新。
+2. シート名変更時は [`gas/Code.gs`](../gas/Code.gs) の候補名を更新。
 3. JSON契約変更時は `docs/gas-deploy-and-json-contract.md` とテストを同時更新。

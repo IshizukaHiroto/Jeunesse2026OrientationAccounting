@@ -2,13 +2,13 @@
 
 ## 1. 配置
 1. スプレッドシートの `拡張機能 > Apps Script` を開く。
-2. [`gas/Code.gs`](/Users/hirotoishizuka/Desktop/Jeunesse2026OrientationAccounting/gas/Code.gs) の内容を貼り付ける。
+2. [`gas/Code.gs`](../gas/Code.gs) の内容を貼り付ける。
 
 ## 2. デプロイ
 1. `デプロイ > 新しいデプロイ`。
 2. 種別は `ウェブアプリ`。
 3. 実行ユーザーは自分、アクセスは `全員` を選択。
-4. 発行されたURLを控えて [`assets/config.js`](/Users/hirotoishizuka/Desktop/Jeunesse2026OrientationAccounting/assets/config.js) の `GAS_ENDPOINT` に設定。
+4. 発行されたURLを控えて [`assets/config.js`](../assets/config.js) の `GAS_ENDPOINT` に設定。
 
 ## 3. JSON契約
 ルートキー:
@@ -37,7 +37,6 @@
 `expenses[]` 公開キー:
 - `id`
 - `date`
-- `category`
 - `description`
 - `amount`
 
@@ -91,6 +90,7 @@
    - `receiptUrl` などのレシート関連項目
    - `approvalStatus` / `invalidFlag` / `invalidReason`
    - `note`
+   - `category`
    - `payer`
    - `collectedAmount`
    - `appliedDate`

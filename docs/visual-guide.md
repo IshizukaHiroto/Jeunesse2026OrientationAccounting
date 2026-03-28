@@ -7,16 +7,16 @@
 
 ![運用フロー図](./diagrams/operations-flow.svg)
 
-Mermaidソース: [`docs/diagrams/operations-flow.mmd`](/Users/hirotoishizuka/Desktop/Jeunesse2026OrientationAccounting/docs/diagrams/operations-flow.mmd)
+Mermaidソース: [`diagrams/operations-flow.mmd`](./diagrams/operations-flow.mmd)
 
 ## 2. 構成ツリー（どこに何があるか）
 
 ![構成ツリー図](./diagrams/system-tree.svg)
 
-Mermaidソース: [`docs/diagrams/system-tree.mmd`](/Users/hirotoishizuka/Desktop/Jeunesse2026OrientationAccounting/docs/diagrams/system-tree.mmd)
+Mermaidソース: [`diagrams/system-tree.mmd`](./diagrams/system-tree.mmd)
 
 ## 3. 参照先
 
-- 運用手順: [`docs/dashboard-operation.md`](/Users/hirotoishizuka/Desktop/Jeunesse2026OrientationAccounting/docs/dashboard-operation.md)
-- JSON契約: [`docs/gas-deploy-and-json-contract.md`](/Users/hirotoishizuka/Desktop/Jeunesse2026OrientationAccounting/docs/gas-deploy-and-json-contract.md)
-- シート構成: [`docs/spreadsheet-setup.md`](/Users/hirotoishizuka/Desktop/Jeunesse2026OrientationAccounting/docs/spreadsheet-setup.md)
+- 運用手順: [`dashboard-operation.md`](./dashboard-operation.md)
+- JSON契約: [`gas-deploy-and-json-contract.md`](./gas-deploy-and-json-contract.md)
+- シート構成: [`spreadsheet-setup.md`](./spreadsheet-setup.md)

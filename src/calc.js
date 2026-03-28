@@ -396,6 +396,104 @@
     };
   }
 
+  function buildDashboardOverview(payload) {
+    var data = payload && typeof payload === "object" ? payload : {};
+    var summary = data.summary || computeSummary(data);
+    var collection = Array.isArray(data.collection) ? data.collection : [];
+    var expenses = Array.isArray(data.expenses) ? data.expenses : [];
+    var reimbursements = Array.isArray(data.reimbursements) ? data.reimbursements : [];
+
+    var collectionAmountPerMember = toNumber(
+      data.meta && data.meta.collectionAmountPerMember !== undefined
+        ? data.meta.collectionAmountPerMember
+        : summary.collectionAmountPerMember
+    );
+
+    var totalMembers = collection.length;
+    if (totalMembers <= 0) {
+      totalMembers = Math.max(0, toNumber(summary.paidMembers) + toNumber(summary.unpaidMembers));
+    }
+
+    var targetCollection = Math.max(0, totalMembers * collectionAmountPerMember);
+    var collectionTotal = Math.max(0, toNumber(summary.collectionTotal));
+    var expensesTotal = Math.max(0, toNumber(summary.expensesTotal));
+    var availableAfterExpenses = toNumber(summary.availableAfterExpenses);
+    var plannedReimbursementsTotal = Math.max(0, toNumber(summary.plannedReimbursementsTotal));
+    var collectedInTarget = targetCollection > 0 ? Math.min(collectionTotal, targetCollection) : 0;
+    var unpaidTargetAmount = Math.max(targetCollection - collectedInTarget, 0);
+    var spentInTarget = targetCollection > 0 ? Math.min(expensesTotal, collectedInTarget) : 0;
+    var remainingTargetAmount = targetCollection > 0 ? Math.max(collectedInTarget - spentInTarget, 0) : 0;
+
+    var outflowTypeCount = 0;
+    if (expenses.length > 0) {
+      outflowTypeCount += 1;
+    }
+    if (reimbursements.length > 0) {
+      outflowTypeCount += 1;
+    }
+
+    var pendingRefundRows = reimbursements.filter(function (row) {
+      return normalize(row && row.refundStatus) !== "返金済";
+    });
+
+    return {
+      summary: summary,
+      collectionAmountPerMember: collectionAmountPerMember,
+      totalMembers: totalMembers,
+      targetCollection: targetCollection,
+      collectionRate: targetCollection > 0 ? (collectionTotal / targetCollection) * 100 : 0,
+      paymentRate: totalMembers > 0 ? (Math.max(0, toNumber(summary.paidMembers)) / totalMembers) * 100 : 0,
+      unpaidTargetAmount: unpaidTargetAmount,
+      remainingTargetAmount: remainingTargetAmount,
+      spentInTarget: spentInTarget,
+      usageRate: targetCollection > 0 ? (spentInTarget / targetCollection) * 100 : 0,
+      availableAfterExpenses: availableAfterExpenses,
+      plannedReimbursementsTotal: plannedReimbursementsTotal,
+      outflowTypeCount: outflowTypeCount,
+      pendingRefundCount: pendingRefundRows.length,
+      pendingRefundTotal: sumBy(pendingRefundRows, function (row) {
+        return pickReimbursementAmount(row);
+      })
+    };
+  }
+
+  function createOutflowRows(payload) {
+    var data = payload && typeof payload === "object" ? payload : {};
+    var expenses = Array.isArray(data.expenses) ? data.expenses : [];
+    var reimbursements = Array.isArray(data.reimbursements) ? data.reimbursements : [];
+
+    var expenseRows = expenses.map(function (row, index) {
+      return {
+        id: row && row.id !== undefined ? row.id : "expense-" + String(index),
+        kind: "expense",
+        nickname: "--",
+        typeLabel: "経費",
+        description: normalize(row && row.description) || "内容未入力",
+        amount: Math.max(0, toNumber(row && row.amount)),
+        dateLabel: normalize(row && row.date) || "--",
+        statusLabel: "-",
+        statusTone: "neutral"
+      };
+    });
+
+    var reimbursementRows = reimbursements.map(function (row, index) {
+      var refundStatus = normalize(row && row.refundStatus) || "未返金";
+      return {
+        id: row && row.id !== undefined ? row.id : "reimbursement-" + String(index),
+        kind: "reimbursement",
+        nickname: normalize(row && row.nickname) || "--",
+        typeLabel: "立替",
+        description: normalize(row && row.description) || "内容未入力",
+        amount: Math.max(0, pickReimbursementAmount(row)),
+        dateLabel: "--",
+        statusLabel: refundStatus,
+        statusTone: refundStatus === "返金済" ? "success" : "pending"
+      };
+    });
+
+    return expenseRows.concat(reimbursementRows);
+  }
+
   function validatePayloadShape(payload) {
     var errors = [];
     var allowedMetaKeys = [
@@ -408,7 +506,7 @@
       "seasonEnd"
     ];
     var allowedCollectionKeys = ["nickname", "paymentStatus", "confirmedDate"];
-    var allowedExpenseKeys = ["id", "date", "category", "description", "amount"];
+    var allowedExpenseKeys = ["id", "date", "description", "amount"];
     var allowedReimbursementKeys = [
       "id",
       "nickname",
@@ -532,6 +630,8 @@
     computeEqualRefundPlan: computeEqualRefundPlan,
     computeProrationPlan: computeProrationPlan,
     computeBalanceComposition: computeBalanceComposition,
+    buildDashboardOverview: buildDashboardOverview,
+    createOutflowRows: createOutflowRows,
     validatePayloadShape: validatePayloadShape
   };
 });

@@ -5,6 +5,8 @@ const {
   computeEqualRefundPlan,
   computeProrationPlan,
   computeBalanceComposition,
+  buildDashboardOverview,
+  createOutflowRows,
   filterValidReimbursements,
   sortByNickname
 } = require("../src/calc");
@@ -249,4 +251,114 @@ test("computeBalanceComposition handles zero base amount", () => {
   assert.equal(composition.shortageAmount, 1400);
   assert.equal(composition.percentages.outflow, 0);
   assert.equal(composition.percentages.shortage, 100);
+});
+
+test("buildDashboardOverview derives target and progress values from public payload fields", () => {
+  const overview = buildDashboardOverview({
+    meta: {
+      collectionAmountPerMember: 4000
+    },
+    collection: [
+      { nickname: "A", paymentStatus: "済" },
+      { nickname: "B", paymentStatus: "済" },
+      { nickname: "C", paymentStatus: "未" }
+    ],
+    expenses: [
+      { amount: 3200 },
+      { amount: 1800 },
+      { amount: 1200 }
+    ],
+    reimbursements: [
+      { reimbursementAmount: 700, refundStatus: "未返金" },
+      { reimbursementAmount: 500, refundStatus: "返金済" }
+    ],
+    summary: {
+      paidMembers: 2,
+      unpaidMembers: 1,
+      collectionTotal: 8000,
+      expensesTotal: 6200,
+      plannedReimbursementsTotal: 1200,
+      availableAfterExpenses: 1800,
+      currentBalance: 600
+    }
+  });
+
+  assert.equal(overview.totalMembers, 3);
+  assert.equal(overview.targetCollection, 12000);
+  assert.ok(Math.abs(overview.collectionRate - 8000 / 120) < 1e-9);
+  assert.ok(Math.abs(overview.paymentRate - 200 / 3) < 1e-9);
+  assert.equal(overview.unpaidTargetAmount, 4000);
+  assert.equal(overview.spentInTarget, 6200);
+  assert.equal(overview.remainingTargetAmount, 1800);
+  assert.equal(overview.outflowTypeCount, 2);
+  assert.equal(overview.pendingRefundCount, 1);
+  assert.equal(overview.pendingRefundTotal, 700);
+});
+
+test("buildDashboardOverview caps spent amount by collected target when collection lags behind expenses", () => {
+  const overview = buildDashboardOverview({
+    meta: {
+      collectionAmountPerMember: 4000
+    },
+    collection: [
+      { nickname: "A", paymentStatus: "済" },
+      { nickname: "B", paymentStatus: "未" },
+      { nickname: "C", paymentStatus: "未" }
+    ],
+    expenses: [
+      { amount: 5000 },
+      { amount: 3000 }
+    ],
+    reimbursements: [],
+    summary: {
+      paidMembers: 1,
+      unpaidMembers: 2,
+      collectionTotal: 4000,
+      expensesTotal: 8000,
+      plannedReimbursementsTotal: 0,
+      availableAfterExpenses: -4000,
+      currentBalance: -4000
+    }
+  });
+
+  assert.equal(overview.targetCollection, 12000);
+  assert.equal(overview.unpaidTargetAmount, 8000);
+  assert.equal(overview.spentInTarget, 4000);
+  assert.equal(overview.remainingTargetAmount, 0);
+  assert.ok(Math.abs(overview.usageRate - 100 / 3) < 1e-9);
+});
+
+test("createOutflowRows normalizes expenses and reimbursements without exposing private fields", () => {
+  const rows = createOutflowRows({
+    expenses: [
+      { id: 10, date: "2026-04-01", description: "名札", amount: 3200, payer: "内部" }
+    ],
+    reimbursements: [
+      { id: 20, nickname: "あおい", description: "ランチ会", reimbursementAmount: 1400, refundStatus: "未返金", approvalStatus: "承認済" }
+    ]
+  });
+
+  assert.equal(rows.length, 2);
+  assert.deepEqual(rows[0], {
+    id: 10,
+    kind: "expense",
+    nickname: "--",
+    typeLabel: "経費",
+    description: "名札",
+    amount: 3200,
+    dateLabel: "2026-04-01",
+    statusLabel: "-",
+    statusTone: "neutral"
+  });
+  assert.deepEqual(rows[1], {
+    id: 20,
+    kind: "reimbursement",
+    nickname: "あおい",
+    typeLabel: "立替",
+    description: "ランチ会",
+    amount: 1400,
+    dateLabel: "--",
+    statusLabel: "未返金",
+    statusTone: "pending"
+  });
 });

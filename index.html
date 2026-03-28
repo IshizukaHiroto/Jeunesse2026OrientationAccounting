@@ -18,91 +18,137 @@
     <link rel="stylesheet" href="./assets/styles.css" />
   </head>
   <body>
-    <div class="app-shell">
-      <aside class="app-sidebar" aria-label="デスクトップメニュー">
-        <div class="sidebar-brand">
-          <p class="sidebar-eyebrow">Jeunesse 2026</p>
-          <p class="sidebar-heading">新歓会計ダッシュボード</p>
+    <div class="dashboard-shell">
+      <aside class="dashboard-sidebar" aria-label="デスクトップメニュー">
+        <div class="sidebar-top">
+          <div class="sidebar-brand">
+            <div>
+              <p class="sidebar-brand-title">Jeunesse</p>
+              <p class="sidebar-brand-subtitle">2026年度 新歓会計</p>
+            </div>
+            <span class="sidebar-brand-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </span>
+          </div>
+
+          <nav class="sidebar-nav" aria-label="画面切替" role="tablist">
+            <button
+              type="button"
+              id="desktop-tab-summary"
+              class="sidebar-tab is-active"
+              data-view="summary"
+              role="tab"
+              aria-controls="view-panel-summary"
+              aria-selected="true"
+              tabindex="0"
+            >
+              <span class="sidebar-tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="4" width="6" height="6" rx="1.4" />
+                  <rect x="14" y="4" width="6" height="6" rx="1.4" />
+                  <rect x="4" y="14" width="6" height="6" rx="1.4" />
+                  <rect x="14" y="14" width="6" height="6" rx="1.4" />
+                </svg>
+              </span>
+              <span>サマリー</span>
+            </button>
+            <button
+              type="button"
+              id="desktop-tab-collection"
+              class="sidebar-tab"
+              data-view="collection"
+              role="tab"
+              aria-controls="view-panel-collection"
+              aria-selected="false"
+              tabindex="-1"
+            >
+              <span class="sidebar-tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="5" width="16" height="14" rx="2.2" />
+                  <path d="M8 10h8" />
+                  <path d="M8 14h5" />
+                  <path d="M6.5 5V3.7" />
+                  <path d="M17.5 5V3.7" />
+                </svg>
+              </span>
+              <span>歳入</span>
+            </button>
+            <button
+              type="button"
+              id="desktop-tab-outflow"
+              class="sidebar-tab"
+              data-view="outflow"
+              role="tab"
+              aria-controls="view-panel-outflow"
+              aria-selected="false"
+              tabindex="-1"
+            >
+              <span class="sidebar-tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 8l5 5 4-4 7 7" />
+                  <path d="M20 11V16H15" />
+                </svg>
+              </span>
+              <span>支出</span>
+            </button>
+            <button
+              type="button"
+              id="desktop-tab-refund"
+              class="sidebar-tab"
+              data-view="refund"
+              role="tab"
+              aria-controls="view-panel-refund"
+              aria-selected="false"
+              tabindex="-1"
+            >
+              <span class="sidebar-tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4.5 12a7.5 7.5 0 0 1 12.8-5.3" />
+                  <path d="M18.3 3.7v4.7h-4.7" />
+                  <path d="M19.5 12a7.5 7.5 0 0 1-12.8 5.3" />
+                  <path d="M5.7 20.3v-4.7h4.7" />
+                </svg>
+              </span>
+              <span>返金状況</span>
+            </button>
+          </nav>
         </div>
 
-        <nav class="sidebar-nav" aria-label="画面切替" role="tablist">
-          <button
-            type="button"
-            id="desktop-tab-summary"
-            class="nav-item is-active"
-            data-view="summary"
-            role="tab"
-            aria-controls="view-panel-summary"
-            aria-selected="true"
-            tabindex="0"
-          >
-            サマリー
-          </button>
-          <button
-            type="button"
-            id="desktop-tab-collection"
-            class="nav-item"
-            data-view="collection"
-            role="tab"
-            aria-controls="view-panel-collection"
-            aria-selected="false"
-            tabindex="-1"
-          >
-            集金
-          </button>
-          <button
-            type="button"
-            id="desktop-tab-outflow"
-            class="nav-item"
-            data-view="outflow"
-            role="tab"
-            aria-controls="view-panel-outflow"
-            aria-selected="false"
-            tabindex="-1"
-          >
-            出費
-          </button>
-        </nav>
+        <div class="sidebar-footer">
+          <p class="sidebar-updated-label">最終更新: <span id="updated-at-sidebar">--</span></p>
+        </div>
       </aside>
 
-      <main class="app-main">
-        <nav class="top-navbar" aria-label="サイトナビゲーション">
-          <span class="brand-logo" aria-label="Jeunesse2026">
-            <span class="brand-letter" aria-hidden="true">J</span>
-            <span class="brand-letter" aria-hidden="true">e</span>
-            <span class="brand-letter" aria-hidden="true">u</span>
-            <span class="brand-letter" aria-hidden="true">n</span>
-            <span class="brand-letter" aria-hidden="true">e</span>
-            <span class="brand-letter" aria-hidden="true">s</span>
-            <span class="brand-letter" aria-hidden="true">s</span>
-            <span class="brand-letter" aria-hidden="true">e</span>
-            <span class="brand-letter" aria-hidden="true">2</span>
-            <span class="brand-letter" aria-hidden="true">0</span>
-            <span class="brand-letter" aria-hidden="true">2</span>
-            <span class="brand-letter" aria-hidden="true">6</span>
-          </span>
-          <div class="navbar-actions">
-            <span id="sync-chip" class="status-chip-ok nav-status-chip shrink-0 whitespace-nowrap">準備中</span>
-            <span class="nav-updated-chip">最終反映: <span id="updated-at">--</span></span>
+      <main class="dashboard-main">
+        <header class="content-toolbar">
+          <div class="content-heading">
+            <p class="content-eyebrow lg:hidden">Jeunesse</p>
+            <h1 class="content-title">2026年度 新歓会計ダッシュボード</h1>
+          </div>
+          <div class="content-utilities">
+            <span id="sync-chip" class="sync-chip sync-chip-ok">準備中</span>
+            <p class="content-updated-mobile lg:hidden">最終更新: <span id="updated-at">--</span></p>
             <button
               id="manual-refresh-btn"
-              class="ghost-btn refresh-btn refresh-btn-nav"
+              class="refresh-button"
               data-loading="false"
               aria-busy="false"
             >
-              <span id="refresh-label" class="refresh-label">今すぐ更新</span>
+              <span id="refresh-label">更新</span>
             </button>
           </div>
-        </nav>
+        </header>
 
         <section
           id="sync-banner"
-          class="mt-4 hidden rounded-xl border px-4 py-3 text-sm"
+          class="sync-banner hidden"
           role="status"
           aria-live="polite"
           aria-atomic="true"
         ></section>
-        <section id="loading-notice" class="loading-notice mt-3 hidden" aria-live="polite"></section>
+        <section id="loading-notice" class="loading-notice hidden" aria-live="polite"></section>
 
         <section
           id="view-panel-summary"
@@ -112,61 +158,158 @@
           aria-labelledby="desktop-tab-summary mobile-tab-summary"
           tabindex="0"
         >
-          <section class="summary-metrics mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <article class="metric-card">
-              <p class="metric-label">集金総額</p>
-              <p id="metric-collection" class="metric-value">¥0</p>
-              <p id="metric-paid-info" class="mt-1 text-xs text-court-700">済 0名 / 未 0名</p>
+          <section class="summary-kpi-grid">
+            <article class="summary-card summary-card-blue">
+              <div class="summary-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2v20" />
+                  <path d="M17 6.5A4.5 4.5 0 0 0 12.5 3H10a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6h-4.5A4.5 4.5 0 0 1 5 12.5" />
+                </svg>
+              </div>
+              <p class="summary-card-label">会費集金額</p>
+              <p id="summary-collection-amount" class="summary-card-value">¥0</p>
+              <div class="summary-progress-row">
+                <p id="summary-collection-target" class="summary-card-meta">目標 ¥0</p>
+                <p id="summary-collection-rate" class="summary-card-rate">0%</p>
+              </div>
+              <div class="summary-progress-track summary-progress-track-blue">
+                <span id="summary-collection-bar" class="summary-progress-fill" style="width: 0%"></span>
+              </div>
             </article>
-            <article class="metric-card">
-              <p class="metric-label">出費</p>
-              <p id="metric-outflow" class="metric-value">¥0</p>
-              <p id="metric-outflow-info" class="mt-1 text-xs text-court-700">経費 ¥0 / 立替返金予定 ¥0</p>
+
+            <article class="summary-card summary-card-violet">
+              <div class="summary-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 8l5 5 4-4 7 7" />
+                  <path d="M20 11V16H15" />
+                </svg>
+              </div>
+              <p class="summary-card-label">総支出額</p>
+              <p id="summary-expenses-amount" class="summary-card-value">¥0</p>
+              <p id="summary-expenses-meta" class="summary-card-meta">0種別の支出内訳</p>
             </article>
-            <article class="metric-card">
-              <p class="metric-label">現在残高</p>
-              <p id="metric-balance" class="metric-value">¥0</p>
-              <p id="metric-balance-info" class="mt-1 text-xs text-court-700">精算状況を表示します。</p>
+
+            <article class="summary-card summary-card-orange">
+              <div class="summary-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="5" width="16" height="14" rx="2.2" />
+                  <path d="M8 10h8" />
+                  <path d="M8 14h5" />
+                  <path d="M6.5 5V3.7" />
+                  <path d="M17.5 5V3.7" />
+                </svg>
+              </div>
+              <p class="summary-card-label">返金予定額</p>
+              <p id="summary-refunds-amount" class="summary-card-value">¥0</p>
+              <p id="summary-refunds-meta" class="summary-card-meta">0件の未返金立替</p>
+            </article>
+
+            <article class="summary-card summary-card-green">
+              <div class="summary-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="10" cy="7" r="4" />
+                  <path d="M20 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              </div>
+              <p class="summary-card-label">納入状況</p>
+              <p id="summary-payment-main" class="summary-card-value">0 / 0名</p>
+              <div class="summary-progress-row">
+                <p id="summary-payment-meta" class="summary-card-meta">未納: 0名</p>
+                <p id="summary-payment-rate" class="summary-card-rate">0%</p>
+              </div>
+              <div class="summary-progress-track summary-progress-track-green">
+                <span id="summary-payment-bar" class="summary-progress-fill" style="width: 0%"></span>
+              </div>
             </article>
           </section>
 
-          <article class="section-shell">
-            <div class="px-4 pb-4 pt-4">
-              <h2 class="font-display text-lg font-semibold text-court-900">集金と残高の円グラフ</h2>
-              <div class="summary-subsections">
-                <section class="summary-subsection">
-                  <h3 class="text-sm font-semibold text-court-900">集金進捗</h3>
-                  <p class="mt-1 text-xs text-court-700">済 / 未 の割合</p>
-                  <div class="chart-stage mt-3">
-                    <canvas id="collection-chart" aria-label="集金状況の円グラフ" role="img"></canvas>
-                    <p id="collection-chart-empty" class="chart-empty">データを読み込み中です。</p>
-                  </div>
-                </section>
-                <section class="summary-subsection">
-                  <h3 class="text-sm font-semibold text-court-900">残高内訳</h3>
-                  <p class="mt-1 text-xs text-court-700">集金総額をもとに、出費・残高・不足分を表示します。</p>
-                  <div class="chart-stage mt-3">
-                    <canvas id="balance-chart" aria-label="残高内訳の円グラフ" role="img"></canvas>
-                    <p id="balance-chart-empty" class="chart-empty">データを読み込み中です。</p>
-                  </div>
-                  <ul id="balance-breakdown" class="mt-3 space-y-1 text-xs text-court-900"></ul>
-                </section>
+          <section class="summary-detail-grid">
+            <article class="summary-panel">
+              <div class="summary-panel-header">
+                <h2 class="summary-panel-title">全体収支状況</h2>
+                <p class="summary-panel-copy">現在の残高と収支のサマリー</p>
               </div>
-            </div>
-          </article>
 
-          <article id="settlement-guide" class="section-shell" aria-label="精算ガイド">
-            <div class="px-4 pb-4 pt-4">
-              <p id="settlement-title" class="mt-3 text-sm font-bold text-court-900">データ待機中</p>
-              <p id="settlement-body" class="mt-2 text-sm leading-relaxed text-court-800">データを読み込むと精算方針を表示します。</p>
-              <p id="settlement-footnote" class="mt-3 text-xs text-court-700"></p>
-            </div>
-          </article>
+              <div class="balance-stack">
+                <div class="balance-row balance-row-collection">
+                  <span>集金額</span>
+                  <strong id="summary-balance-collection">¥0</strong>
+                </div>
+                <div class="balance-row balance-row-expenses">
+                  <span>支出額</span>
+                  <strong id="summary-balance-expenses">¥0</strong>
+                </div>
+                <div id="summary-available-surface" class="balance-surface balance-surface-positive">
+                  <span>現在の残高</span>
+                  <strong id="summary-available-balance">¥0</strong>
+                </div>
+              </div>
+            </article>
 
-          <article class="section-shell">
-            <div class="px-4 pb-4 pt-4">
-              <h2 class="font-display text-lg font-semibold text-court-900">精算ルール（2026）</h2>
-              <div class="mt-3 space-y-2 text-sm leading-relaxed text-court-900">
+            <article class="summary-panel">
+              <div class="summary-panel-header">
+                <h2 class="summary-panel-title">予算使用状況</h2>
+                <p class="summary-panel-copy">全体予算に対する使用割合</p>
+              </div>
+
+              <div class="usage-layout">
+                <div class="usage-chart-wrap">
+                  <canvas id="usage-chart" aria-label="予算使用状況の円グラフ" role="img"></canvas>
+                  <p id="usage-chart-empty" class="chart-empty">現在表示できるデータはありません。</p>
+                </div>
+
+                <div class="usage-metrics">
+                  <div class="usage-pill usage-pill-expenses">
+                    <span class="usage-pill-label">
+                      <span class="usage-dot"></span>
+                      支出済
+                    </span>
+                    <strong id="budget-expenses-amount">¥0</strong>
+                  </div>
+                  <div class="usage-pill usage-pill-balance">
+                    <span class="usage-pill-label">
+                      <span class="usage-dot"></span>
+                      残高
+                    </span>
+                    <strong id="budget-balance-amount">¥0</strong>
+                  </div>
+                  <div class="usage-pill usage-pill-unpaid">
+                    <span class="usage-pill-label">
+                      <span class="usage-dot"></span>
+                      未集金
+                    </span>
+                    <strong id="budget-unpaid-amount">¥0</strong>
+                  </div>
+                  <div class="usage-rate-row">
+                    <span>予算使用率</span>
+                    <strong id="budget-usage-rate">0%</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <section class="summary-support-grid">
+            <article id="settlement-guide" class="detail-card">
+              <div class="detail-card-header">
+                <h2 class="detail-card-title">精算ガイド</h2>
+                <p class="detail-card-copy">現在の差額に応じて、次のアクションを案内します。</p>
+              </div>
+              <div class="detail-card-body">
+                <p id="settlement-title" class="detail-lead">データ待機中</p>
+                <p id="settlement-body" class="detail-text">データを読み込むと精算方針を表示します。</p>
+                <p id="settlement-footnote" class="detail-footnote"></p>
+              </div>
+            </article>
+
+            <article class="detail-card">
+              <div class="detail-card-header">
+                <h2 class="detail-card-title">精算ルール（2026）</h2>
+                <p class="detail-card-copy">公開用の説明だけを残し、必要なルールを端的にまとめています。</p>
+              </div>
+              <div class="detail-card-body detail-card-body-spaced">
                 <p>
                   1. 返金の予定額は、実際に払った金額と上限額（新入生1人あたり <span id="refund-cap-rule">700円</span>）を比べて、小さい方を使います。
                 </p>
@@ -174,8 +317,8 @@
                 <p>3. お金が不足しているときは、予定していた返金額を同じ割合で減らします。</p>
                 <p>4. 1円単位の差は最後に調整して、全体の合計を一致させます。</p>
               </div>
-            </div>
-          </article>
+            </article>
+          </section>
         </section>
 
         <section
@@ -187,32 +330,49 @@
           aria-hidden="true"
           tabindex="-1"
         >
-          <article class="section-shell">
-            <div class="section-header">
-              <div>
-                <h2 class="font-display text-lg font-semibold text-court-900">集金状況</h2>
-                <p class="mt-1 text-xs text-court-700">
-                  上位5件から表示。支払い済みだけの絞り込みと、名前で昇順/降順の切替ができます。
-                </p>
-              </div>
-              <div class="collection-toolbar">
-                <div class="sort-controls" role="group" aria-label="集金並び替え">
-                  <button id="collection-sort-asc-btn" type="button" class="sort-btn" aria-pressed="true">昇順</button>
-                  <button id="collection-sort-desc-btn" type="button" class="sort-btn" aria-pressed="false">降順</button>
+          <div class="view-header">
+            <div>
+              <h2 class="view-title">歳入</h2>
+              <p class="view-copy">会費の納入状況を、公開可能な情報だけで一覧表示します。</p>
+            </div>
+            <div class="filter-shell">
+              <button
+                id="collection-filter-toggle"
+                type="button"
+                class="filter-button"
+                aria-expanded="false"
+                aria-controls="collection-filter-panel"
+              >
+                <svg class="filter-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 6h16" />
+                  <path d="M7 12h10" />
+                  <path d="M10 18h4" />
+                </svg>
+                フィルター
+              </button>
+              <div id="collection-filter-panel" class="filter-panel hidden">
+                <div class="filter-group">
+                  <p class="filter-group-label">並び順</p>
+                  <div class="filter-chip-row" role="group" aria-label="歳入の並び順">
+                    <button id="collection-filter-sort-asc" type="button" class="filter-chip" aria-pressed="true">昇順</button>
+                    <button id="collection-filter-sort-desc" type="button" class="filter-chip" aria-pressed="false">降順</button>
+                  </div>
                 </div>
-                <button
-                  id="collection-paid-only-btn"
-                  type="button"
-                  class="filter-chip-btn"
-                  aria-pressed="false"
-                >
-                  支払い済みだけ
-                </button>
+                <div class="filter-group">
+                  <p class="filter-group-label">表示条件</p>
+                  <button id="collection-filter-paid-only" type="button" class="filter-chip filter-chip-wide" aria-pressed="false">
+                    納入済みだけ表示
+                  </button>
+                </div>
               </div>
             </div>
-            <div class="px-4 pb-4 pt-3">
-              <div id="collection-list" class="space-y-2"></div>
-              <button id="collection-more-btn" class="ghost-btn list-more-btn mt-3 hidden">もっと見る</button>
+          </div>
+
+          <article class="table-card">
+            <div id="collection-table" class="table-region"></div>
+            <div class="table-card-footer">
+              <button id="collection-more-btn" class="table-more-button hidden">もっと見る</button>
+              <p id="collection-count" class="table-count">0件 表示中 / 全0件</p>
             </div>
           </article>
         </section>
@@ -226,50 +386,103 @@
           aria-hidden="true"
           tabindex="-1"
         >
-          <article class="section-shell">
-            <div class="section-header">
-              <div>
-                <h2 class="font-display text-lg font-semibold text-court-900">出費一覧</h2>
-                <p class="mt-1 text-xs text-court-700">経費と立替返金予定をまとめて確認できます。</p>
+          <div class="view-header">
+            <div>
+              <h2 class="view-title">支出</h2>
+              <p class="view-copy">経費記録と立替返金管理を、公開JSONの範囲でまとめて確認できます。</p>
+              <p class="view-note">立替の返金上限は新入生1人あたり <span id="refund-cap-note">700円</span> です。</p>
+            </div>
+            <div class="filter-shell">
+              <button
+                id="outflow-filter-toggle"
+                type="button"
+                class="filter-button"
+                aria-expanded="false"
+                aria-controls="outflow-filter-panel"
+              >
+                <svg class="filter-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 6h16" />
+                  <path d="M7 12h10" />
+                  <path d="M10 18h4" />
+                </svg>
+                フィルター
+              </button>
+              <div id="outflow-filter-panel" class="filter-panel hidden">
+                <div class="filter-group">
+                  <p class="filter-group-label">種別</p>
+                  <div class="filter-chip-row" role="group" aria-label="支出の種別">
+                    <button id="outflow-filter-all" type="button" class="filter-chip" aria-pressed="true">すべて</button>
+                    <button id="outflow-filter-expense" type="button" class="filter-chip" aria-pressed="false">経費</button>
+                    <button id="outflow-filter-reimbursement" type="button" class="filter-chip" aria-pressed="false">立替</button>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="px-4 pb-4 pt-3">
-              <p class="text-sm leading-relaxed text-court-900">
-                サマリーでは経費と立替返金予定を合算して出費として表示し、詳細は下の2一覧で確認します。
-              </p>
+          </div>
+
+          <article class="table-card">
+            <div id="outflow-table" class="table-region"></div>
+            <div class="table-card-footer">
+              <button id="outflow-more-btn" class="table-more-button hidden">もっと見る</button>
+              <p id="outflow-count" class="table-count">0件 表示中 / 全0件</p>
             </div>
           </article>
+        </section>
 
-          <article class="section-shell">
-            <div class="section-header">
-              <div>
-                <h2 class="font-display text-lg font-semibold text-court-900">経費明細</h2>
-                <p class="mt-1 text-xs text-court-700">上位5件から表示します。</p>
+        <section
+          id="view-panel-refund"
+          class="view-panel hidden"
+          data-view-panel="refund"
+          role="tabpanel"
+          aria-labelledby="desktop-tab-refund mobile-tab-refund"
+          aria-hidden="true"
+          tabindex="-1"
+        >
+          <div class="view-header">
+            <div>
+              <h2 class="view-title">返金状況</h2>
+              <p class="view-copy">立替申請の一覧を、返金額とステータス中心で確認できます。</p>
+            </div>
+            <div class="filter-shell">
+              <button
+                id="refund-filter-toggle"
+                type="button"
+                class="filter-button"
+                aria-expanded="false"
+                aria-controls="refund-filter-panel"
+              >
+                <svg class="filter-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 6h16" />
+                  <path d="M7 12h10" />
+                  <path d="M10 18h4" />
+                </svg>
+                フィルター
+              </button>
+              <div id="refund-filter-panel" class="filter-panel hidden">
+                <div class="filter-group">
+                  <p class="filter-group-label">並び順</p>
+                  <div class="filter-chip-row" role="group" aria-label="返金状況の並び順">
+                    <button id="refund-filter-sort-asc" type="button" class="filter-chip" aria-pressed="true">昇順</button>
+                    <button id="refund-filter-sort-desc" type="button" class="filter-chip" aria-pressed="false">降順</button>
+                  </div>
+                </div>
+                <div class="filter-group">
+                  <p class="filter-group-label">ステータス</p>
+                  <div class="filter-chip-row" role="group" aria-label="返金状況の絞り込み">
+                    <button id="refund-filter-status-all" type="button" class="filter-chip" aria-pressed="true">すべて</button>
+                    <button id="refund-filter-status-pending" type="button" class="filter-chip" aria-pressed="false">未返金</button>
+                    <button id="refund-filter-status-done" type="button" class="filter-chip" aria-pressed="false">返金済</button>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="px-4 pb-4 pt-3">
-              <div id="expenses-list" class="space-y-2"></div>
-              <button id="expenses-more-btn" class="ghost-btn list-more-btn mt-3 hidden">もっと見る</button>
-            </div>
-          </article>
+          </div>
 
-          <article class="section-shell">
-            <div class="section-header">
-              <div>
-                <h2 class="font-display text-lg font-semibold text-court-900">立替一覧</h2>
-                <p class="mt-1 text-xs text-court-700">上位5件から表示。名前で昇順/降順の切替ができます。</p>
-                <p class="mt-1 text-xs text-court-700">
-                  返金上限は新入生1人あたり <span id="refund-cap-note">700円</span> です。
-                </p>
-              </div>
-              <div class="sort-controls" role="group" aria-label="立替並び替え">
-                <button id="reimbursements-sort-asc-btn" type="button" class="sort-btn" aria-pressed="true">昇順</button>
-                <button id="reimbursements-sort-desc-btn" type="button" class="sort-btn" aria-pressed="false">降順</button>
-              </div>
-            </div>
-            <div class="px-4 pb-4 pt-3">
-              <div id="reimbursements-list" class="space-y-2"></div>
-              <button id="reimbursements-more-btn" class="ghost-btn list-more-btn mt-3 hidden">もっと見る</button>
+          <article class="table-card">
+            <div id="refund-table" class="table-region"></div>
+            <div class="table-card-footer">
+              <button id="refund-more-btn" class="table-more-button hidden">もっと見る</button>
+              <p id="refund-count" class="table-count">0件 表示中 / 全0件</p>
             </div>
           </article>
         </section>
@@ -287,7 +500,15 @@
         aria-selected="true"
         tabindex="0"
       >
-        サマリー
+        <span class="mobile-tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="6" height="6" rx="1.4" />
+            <rect x="14" y="4" width="6" height="6" rx="1.4" />
+            <rect x="4" y="14" width="6" height="6" rx="1.4" />
+            <rect x="14" y="14" width="6" height="6" rx="1.4" />
+          </svg>
+        </span>
+        <span>サマリー</span>
       </button>
       <button
         type="button"
@@ -299,7 +520,16 @@
         aria-selected="false"
         tabindex="-1"
       >
-        集金
+        <span class="mobile-tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="5" width="16" height="14" rx="2.2" />
+            <path d="M8 10h8" />
+            <path d="M8 14h5" />
+            <path d="M6.5 5V3.7" />
+            <path d="M17.5 5V3.7" />
+          </svg>
+        </span>
+        <span>歳入</span>
       </button>
       <button
         type="button"
@@ -311,7 +541,33 @@
         aria-selected="false"
         tabindex="-1"
       >
-        出費
+        <span class="mobile-tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 8l5 5 4-4 7 7" />
+            <path d="M20 11V16H15" />
+          </svg>
+        </span>
+        <span>支出</span>
+      </button>
+      <button
+        type="button"
+        id="mobile-tab-refund"
+        class="mobile-tab-item"
+        data-view="refund"
+        role="tab"
+        aria-controls="view-panel-refund"
+        aria-selected="false"
+        tabindex="-1"
+      >
+        <span class="mobile-tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4.5 12a7.5 7.5 0 0 1 12.8-5.3" />
+            <path d="M18.3 3.7v4.7h-4.7" />
+            <path d="M19.5 12a7.5 7.5 0 0 1-12.8 5.3" />
+            <path d="M5.7 20.3v-4.7h4.7" />
+          </svg>
+        </span>
+        <span>返金</span>
       </button>
     </nav>
 
