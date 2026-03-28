@@ -69,6 +69,7 @@
     settlementTitle: document.getElementById("settlement-title"),
     settlementBody: document.getElementById("settlement-body"),
     settlementFootnote: document.getElementById("settlement-footnote"),
+    settlementGuide: document.getElementById("settlement-guide"),
     refundCapRule: document.getElementById("refund-cap-rule"),
     refundCapNote: document.getElementById("refund-cap-note"),
     collectionTable: document.getElementById("collection-table"),
@@ -1075,7 +1076,6 @@
 
     state.limits[key] = LIST_STEP;
   }
-
   function updateMoreButton(button, visibleLimit, totalRows) {
     if (!button) {
       return;
