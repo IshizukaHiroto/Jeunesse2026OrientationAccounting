@@ -66,12 +66,6 @@
     budgetUsageRate: document.getElementById("budget-usage-rate"),
     usageChart: document.getElementById("usage-chart"),
     usageChartEmpty: document.getElementById("usage-chart-empty"),
-    settlementTitle: document.getElementById("settlement-title"),
-    settlementBody: document.getElementById("settlement-body"),
-    settlementFootnote: document.getElementById("settlement-footnote"),
-    settlementGuide: document.getElementById("settlement-guide"),
-    refundCapRule: document.getElementById("refund-cap-rule"),
-    refundCapNote: document.getElementById("refund-cap-note"),
     collectionTable: document.getElementById("collection-table"),
     collectionMoreButton: document.getElementById("collection-more-btn"),
     collectionCount: document.getElementById("collection-count"),
@@ -505,7 +499,6 @@
     state.summarySnapshot = overview;
 
     renderUpdatedAt(payload.meta && payload.meta.generatedAt);
-    renderRefundCap(payload.meta);
     renderSummary(overview, false);
     renderCollectionTable(payload.collection || [], overview.collectionAmountPerMember);
     renderOutflowTable(getOutflowRows());
@@ -541,7 +534,6 @@
     state.summarySnapshot = overview;
 
     renderUpdatedAt("");
-    renderRefundCap(null);
     renderSummary(overview, true);
     renderCollectionTable([], 0);
     renderOutflowTable([]);
@@ -558,14 +550,14 @@
     setProgress(dom.summaryCollectionBar, overview.collectionRate);
 
     dom.summaryExpensesAmount.textContent = formatYen(summary.expensesTotal);
-    dom.summaryExpensesMeta.textContent = String(overview.outflowTypeCount) + "種別の支出内訳";
+    dom.summaryExpensesMeta.textContent = "内訳 " + String(overview.outflowTypeCount) + "種類";
 
     dom.summaryRefundsAmount.textContent = formatYen(overview.pendingRefundTotal);
-    dom.summaryRefundsMeta.textContent = String(overview.pendingRefundCount) + "件の未返金立替";
+    dom.summaryRefundsMeta.textContent = "未返金 " + String(overview.pendingRefundCount) + "件";
 
     dom.summaryPaymentMain.textContent =
       String(summary.paidMembers) + " / " + String(overview.totalMembers) + "名";
-    dom.summaryPaymentMeta.textContent = "未納: " + String(summary.unpaidMembers) + "名";
+    dom.summaryPaymentMeta.textContent = "未納 " + String(summary.unpaidMembers) + "名";
     dom.summaryPaymentRate.textContent = formatPercent(overview.paymentRate);
     setProgress(dom.summaryPaymentBar, overview.paymentRate);
 
@@ -579,7 +571,6 @@
     dom.budgetUnpaidAmount.textContent = formatYen(overview.unpaidTargetAmount);
     dom.budgetUsageRate.textContent = formatPercent(overview.usageRate);
 
-    updateSettlementGuide(summary, isEmpty);
   }
 
   function updateAvailableSurface(balance) {
@@ -604,44 +595,6 @@
     }
 
     dom.summaryAvailableSurface.classList.add("balance-surface-zero");
-  }
-
-  function updateSettlementGuide(summary, isEmpty) {
-    if (!dom.settlementTitle || !dom.settlementBody || !dom.settlementFootnote) {
-      return;
-    }
-
-    if (isEmpty) {
-      dom.settlementTitle.textContent = "データ待機中";
-      dom.settlementBody.textContent = "データを読み込むと精算方針を表示します。";
-      dom.settlementFootnote.textContent = "";
-      return;
-    }
-
-    var currentBalance = normalizeNumber(summary.currentBalance, 0);
-
-    if (currentBalance > 0) {
-      dom.settlementTitle.textContent = "返金後も差額がプラスです。均等返金で精算します。";
-      dom.settlementBody.textContent =
-        "返金対象者に同じ金額を返し、1円単位の端数は最後の1件で吸収して合計を揃えます。";
-      dom.settlementFootnote.textContent =
-        "返金予定額を含む差額は " + formatYen(currentBalance) + " です。";
-      return;
-    }
-
-    if (currentBalance < 0) {
-      dom.settlementTitle.textContent = "返金後の差額がマイナスです。按分で返金額を調整します。";
-      dom.settlementBody.textContent =
-        "追加徴収は行わず、各返金予定額を同じ割合で減らして、返せる合計額に合わせます。";
-      dom.settlementFootnote.textContent =
-        "返金予定額を含む差額は " + formatYen(currentBalance) + " です。";
-      return;
-    }
-
-    dom.settlementTitle.textContent = "返金予定額まで含めても差額は 0 円です。";
-    dom.settlementBody.textContent =
-      "この時点で追加精算は不要です。返金ステータスの更新のみ行ってください。";
-    dom.settlementFootnote.textContent = "";
   }
 
   function renderUsageChart(overview) {
@@ -675,7 +628,7 @@
     state.usageChart = new Chart(dom.usageChart, {
       type: "doughnut",
       data: {
-        labels: ["支出済", "残高", "未集金"],
+        labels: ["支出額", "残高", "未納分"],
         datasets: [
           {
             data: values,
@@ -1161,26 +1114,6 @@
     }
   }
 
-  function resolveRefundCap(meta) {
-    var candidate = calc.toNumber ? calc.toNumber(meta && meta.refundCapPerFreshman) : 0;
-    if (candidate > 0) {
-      return candidate;
-    }
-    return DEFAULT_REFUND_CAP;
-  }
-
-  function renderRefundCap(meta) {
-    var label = formatRefundCap(resolveRefundCap(meta));
-
-    if (dom.refundCapRule) {
-      dom.refundCapRule.textContent = label;
-    }
-
-    if (dom.refundCapNote) {
-      dom.refundCapNote.textContent = label;
-    }
-  }
-
   function readChartPalette() {
     var styles = window.getComputedStyle(document.documentElement);
     return {
@@ -1251,10 +1184,6 @@
 
   function createEmptyState(message) {
     return '<div class="empty-state">' + escapeHtml(message) + "</div>";
-  }
-
-  function formatRefundCap(value) {
-    return Math.round(Math.max(0, calc.toNumber ? calc.toNumber(value) : 0)).toLocaleString("ja-JP") + "円";
   }
 
   function formatYen(value) {

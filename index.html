@@ -186,7 +186,7 @@
               </div>
               <p class="summary-card-label">総支出額</p>
               <p id="summary-expenses-amount" class="summary-card-value">¥0</p>
-              <p id="summary-expenses-meta" class="summary-card-meta">0種別の支出内訳</p>
+              <p id="summary-expenses-meta" class="summary-card-meta">内訳 0種類</p>
             </article>
 
             <article class="summary-card summary-card-orange">
@@ -229,7 +229,7 @@
             <article class="summary-panel">
               <div class="summary-panel-header">
                 <h2 class="summary-panel-title">全体収支状況</h2>
-                <p class="summary-panel-copy">現在の残高と収支のサマリー</p>
+                <p class="summary-panel-copy">集金額と支出額から、現在の残高を確認できます。</p>
               </div>
 
               <div class="balance-stack">
@@ -251,7 +251,7 @@
             <article class="summary-panel">
               <div class="summary-panel-header">
                 <h2 class="summary-panel-title">予算使用状況</h2>
-                <p class="summary-panel-copy">全体予算に対する使用割合</p>
+                <p class="summary-panel-copy">集金予定に対する支出の割合です。</p>
               </div>
 
               <div class="usage-layout">
@@ -264,7 +264,7 @@
                   <div class="usage-pill usage-pill-expenses">
                     <span class="usage-pill-label">
                       <span class="usage-dot"></span>
-                      支出済
+                      支出額
                     </span>
                     <strong id="budget-expenses-amount">¥0</strong>
                   </div>
@@ -278,7 +278,7 @@
                   <div class="usage-pill usage-pill-unpaid">
                     <span class="usage-pill-label">
                       <span class="usage-dot"></span>
-                      未集金
+                      未納分
                     </span>
                     <strong id="budget-unpaid-amount">¥0</strong>
                   </div>
@@ -302,8 +302,8 @@
         >
           <div class="view-header">
             <div>
-              <h2 class="view-title">収入</h2>
-              <p class="view-copy">会費の納入状況を、公開可能な情報だけで一覧表示します。</p>
+              <h2 class="view-title">歳入</h2>
+              <p class="view-copy">会費の納入状況を一覧で確認できます。</p>
             </div>
             <div class="filter-shell">
               <button
@@ -359,8 +359,7 @@
           <div class="view-header">
             <div>
               <h2 class="view-title">支出</h2>
-              <p class="view-copy">経費記録と立替返金管理を、公開JSONの範囲でまとめて確認できます。</p>
-              <p class="view-note">立替の返金上限は新入生1人あたり <span id="refund-cap-note">700円</span> です。</p>
+              <p class="view-copy">経費と立替の内容を一覧で確認できます。</p>
             </div>
             <div class="filter-shell">
               <button
@@ -411,7 +410,7 @@
           <div class="view-header">
             <div>
               <h2 class="view-title">返金状況</h2>
-              <p class="view-copy">立替申請の一覧を、返金額とステータス中心で確認できます。</p>
+              <p class="view-copy">立替の返金状況を一覧で確認できます。</p>
             </div>
             <div class="filter-shell">
               <button
