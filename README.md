@@ -1,25 +1,39 @@
-# Jeunesse2026OrientationAccounting
+# Jeunesse 2026 新歓会計ダッシュボード
 
-ジュネスの2026年新歓における会計記録を公開するダッシュボードです。
+神戸大学 Jeunesse の 2026 年度新歓会計を公開用 JSON から可視化する、静的な会計ダッシュボードです。
+会費の納入状況と支出の進み具合を、`サマリー / 収入 / 支出` の 3 画面で確認できます。
 
-## 構成
-- `index.html` + `assets/app.js`: 画面本体
-- `gas/Code.gs`: スプレッドシートからJSONを返すGAS
-- `src/calc.js`: 集計ロジック
-- `docs/`: スプレッドシート/フォーム/GAS/運用手順
-- `testMovies/`: 動作確認動画（mp4）
+## 概要
 
-## スプレッドシート運用で触ってはいけない箇所
-- シート名の基準は `集金管理` / `立替返金管理` / `経費記録` / `設定`。変更する場合は `gas/Code.gs` の候補名と `docs/` を同時更新する。
-- Googleフォーム連携で `フォームの回答 1` ができた場合も、運用上は `立替返金管理` にリネームする。既定名タブが複数あるとGASが判別できない。
-- `立替返金管理` の行削除は禁止。誤申請や締切後申請は `無効フラグ=無効` と `無効理由` で処理する。
-- `設定` シートの項目名は固定。`集金額（1人あたり）`、`返金上限（新入生1人あたり）`、`新歓期間（開始）`、`新歓期間（終了）` を別名にしない。
-- `集金管理!C:C` と `立替返金管理!F:F` は計算列として扱う。手入力で上書きする場合は、式が消えても問題ないか確認してから行う。
-- `立替返金管理` の `承認状況`、`返金状況`、`無効フラグ` は既定値で運用する。公開JSONは `承認済` かつ `有効` のみを出す。
-- レシートURL、個人情報、未承認データ、無効データを公開JSONに載せない。列追加やGAS改修時もこの制約を崩さない。
-- 年度更新時は `gas/Code.gs` の `seasonYear`、画面文言、`docs/` を同じ変更で揃える。
+- GitHub Pages 上で公開する 1 ページ完結のダッシュボードです。
+- データ取得元は Google スプレッドシートと GAS で、ブラウザ側は `index.html` と素の JavaScript で構成しています。
+- 公開画面では、会計確認に必要な最小限の情報だけを表示し、個人情報や内部向け情報は含めません。
 
-## ローカル起動
+## 公開URL
+
+- ライブダッシュボード: [https://ishizukahiroto.github.io/Jeunesse2026OrientationAccounting/](https://ishizukahiroto.github.io/Jeunesse2026OrientationAccounting/)
+
+## 主要機能
+
+- `サマリー` 画面で集金額、総支出額、返金予定額、納入状況を一覧で把握
+- `収入` 画面で `氏名 / 金額 / 納入日 / 状態` を確認
+- `支出` 画面で `経費 / 立替` を同じ一覧で確認し、`立替` フィルターで返金状況を追跡
+- 手動更新ボタンと定期ポーリングによる最新データ反映
+- スマホ幅 390px を含むレスポンシブ表示
+
+## リポジトリ構成
+
+- `index.html`: ダッシュボード本体
+- `assets/app.js`: UI の状態管理と描画
+- `src/calc.js`: 公開 JSON からの集計ロジック
+- `src/styles/tailwind.css`: Tailwind のソース
+- `assets/styles.css`: 配信用にビルドした CSS
+- `gas/Code.gs`: スプレッドシートから公開 JSON を返す GAS
+- `docs/`: 運用手順、JSON 契約、可視ガイド
+- `tests/`: 集計と JSON 契約の単体テスト
+
+## ローカル確認手順
+
 ```bash
 npm install
 npm run build:css
@@ -27,14 +41,37 @@ npm test
 npx serve . -l 4173
 ```
 
-## GitHub Pages 公開手順
-1. GitHubリポジトリの `Settings` を開く。
-2. 左メニュー `Pages` を開く。
-3. `Build and deployment` を `Deploy from a branch` にする。
-4. `Branch: main` / `Folder: / (root)` を選んで `Save`。
-5. 数分後に発行される公開URLへアクセスする。
+ローカル表示後は、少なくとも次を確認してください。
 
-## 公開前チェック
-1. `assets/config.js` の `GAS_ENDPOINT` が本番URLであること。
-2. スマホ幅（390px前後）で表示確認。
-3. `docs/acceptance-test-checklist.md` を全チェック。
+- デスクトップ幅で `サマリー / 収入 / 支出` を切り替えられる
+- スマホ幅 390px で横スクロールが出ない
+- `支出` の `立替` フィルターで返金状況を確認できる
+- 更新中は `更新中...` の非クリック表示になり、完了後に `更新` へ戻る
+
+## GitHub Pages 公開
+
+1. `main` ブランチへ反映する
+2. GitHub の `Settings > Pages` を開く
+3. `Build and deployment` を `Deploy from a branch` に設定する
+4. `Branch: main` と `Folder: / (root)` を選択して保存する
+5. 公開後、ライブ URL でスマホ幅 390px を含む表示確認を行う
+
+## データ公開上の制約
+
+このリポジトリは公開前提ですが、公開できるのはダッシュボード表示に必要な最小限の情報だけです。
+JSON 契約や GAS を変更する場合も、以下の制約は維持してください。
+
+- 公開 JSON に個人情報を含めない
+- 未承認データを含めない
+- `無効フラグ` が立ったデータを含めない
+- レシート URL を含めない
+- `立替返金管理` の行削除はせず、必ず `無効フラグ` で無効化する
+- 年度更新時は `gas/Code.gs` の `seasonYear` と画面文言、関連ドキュメントを同時に更新する
+
+## 関連ドキュメント
+
+- [運用手順](./docs/dashboard-operation.md)
+- [受け入れチェックリスト](./docs/acceptance-test-checklist.md)
+- [GAS デプロイと JSON 契約](./docs/gas-deploy-and-json-contract.md)
+- [図でわかる運用・構成ガイド](./docs/visual-guide.md)
+- [スプレッドシートセットアップ](./docs/spreadsheet-setup.md)

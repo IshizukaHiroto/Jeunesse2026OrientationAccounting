@@ -19,6 +19,7 @@
   </head>
   <body>
     <div class="dashboard-shell">
+      <!-- Desktop sidebar navigation -->
       <aside class="dashboard-sidebar" aria-label="デスクトップメニュー">
         <div class="sidebar-top">
           <div class="sidebar-brand">
@@ -101,7 +102,9 @@
         </div>
       </aside>
 
+      <!-- Main dashboard content -->
       <main class="dashboard-main">
+        <!-- Toolbar -->
         <header class="content-toolbar">
           <div class="content-heading">
             <p class="content-eyebrow lg:hidden">神戸大学Jeunesse</p>
@@ -138,6 +141,7 @@
           aria-live="polite"
           aria-atomic="true"
         ></section>
+        <!-- Summary view -->
         <section
           id="view-panel-summary"
           class="view-panel"
@@ -280,6 +284,7 @@
           </section>
         </section>
 
+        <!-- Collection view -->
         <section
           id="view-panel-collection"
           class="view-panel hidden"
@@ -336,6 +341,7 @@
           </article>
         </section>
 
+        <!-- Outflow view -->
         <section
           id="view-panel-outflow"
           class="view-panel hidden"
@@ -389,6 +395,7 @@
       </main>
     </div>
 
+    <!-- Mobile tabbar -->
     <nav class="mobile-tabbar" aria-label="モバイルメニュー" role="tablist">
       <button
         type="button"

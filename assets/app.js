@@ -4,6 +4,35 @@
   var LIST_STEP = 5;
   var DEFAULT_REFUND_CAP = 700;
   var VIEW_IDS = ["summary", "collection", "outflow"];
+  var EMPTY_MESSAGES = {
+    collection: "収入データはまだありません。",
+    collectionPaidOnly: "納入済みの収入データはまだありません。",
+    outflow: "表示できる支出データはまだありません。"
+  };
+  var SYNC_WARNING_MESSAGES = {
+    staleData: "最新データを確認できなかったため、前回更新分を表示しています。",
+    loadFailed: "データを読み込めませんでした。時間をおいて再読み込みしてください。"
+  };
+  var TYPE_PILLS = {
+    income: {
+      className: "type-pill type-pill-income",
+      label: "収入"
+    },
+    expense: {
+      className: "type-pill type-pill-expense",
+      label: "経費"
+    },
+    reimbursement: {
+      className: "type-pill type-pill-refund",
+      label: "立替"
+    }
+  };
+  var STATUS_PILL_CLASSES = {
+    success: "status-pill status-pill-success",
+    pending: "status-pill status-pill-pending",
+    warning: "status-pill status-pill-warning",
+    neutral: "status-pill status-pill-neutral"
+  };
   var config = window.APP_CONFIG || {};
   var calc = window.AccountingCalc;
   var POLLING_MS = normalizeNumber(config.POLLING_MS, 60000);
@@ -97,21 +126,22 @@
   switchView(state.currentView);
   updateFilterControlUI();
 
-  refreshData({ source: "initial" });
+  refreshData();
   startPolling();
 
+  // Event wiring
   function attachEvents() {
     if (dom.refreshButton) {
       dom.refreshButton.addEventListener("click", function () {
-        refreshData({ source: "manual" });
+        refreshData();
       });
     }
 
     if (dom.collectionMoreButton) {
       dom.collectionMoreButton.addEventListener("click", function () {
-        var totalRows = getVisibleCollectionRows((state.latestPayload && state.latestPayload.collection) || []).length;
+        var totalRows = getVisibleCollectionRows(getCollectionRows()).length;
         toggleListLimit("collection", totalRows);
-        renderCollectionTable((state.latestPayload && state.latestPayload.collection) || [], getCollectionAmountPerMember());
+        rerenderCollection();
       });
     }
 
@@ -119,7 +149,7 @@
       dom.outflowMoreButton.addEventListener("click", function () {
         var totalRows = getVisibleOutflowRows(getOutflowRows()).length;
         toggleListLimit("outflow", totalRows);
-        renderOutflowTable(getOutflowRows());
+        rerenderOutflow();
       });
     }
 
@@ -127,26 +157,23 @@
     bindFilterToggle("outflow");
 
     bindPressedClick(dom.collectionFilterSortAsc, function () {
-      setSortDirection("collection", "asc");
+      setCollectionSortDirection("asc");
     });
     bindPressedClick(dom.collectionFilterSortDesc, function () {
-      setSortDirection("collection", "desc");
+      setCollectionSortDirection("desc");
     });
     bindPressedClick(dom.collectionFilterPaidOnly, function () {
-      state.filters.collectionPaidOnly = !state.filters.collectionPaidOnly;
-      state.limits.collection = LIST_STEP;
-      updateCollectionFilterUI();
-      renderCollectionTable((state.latestPayload && state.latestPayload.collection) || [], getCollectionAmountPerMember());
+      toggleCollectionPaidOnlyFilter();
     });
 
     bindPressedClick(dom.outflowFilterAll, function () {
-      setOutflowType("all");
+      setOutflowFilterType("all");
     });
     bindPressedClick(dom.outflowFilterExpense, function () {
-      setOutflowType("expense");
+      setOutflowFilterType("expense");
     });
     bindPressedClick(dom.outflowFilterReimbursement, function () {
-      setOutflowType("reimbursement");
+      setOutflowFilterType("reimbursement");
     });
 
     Array.prototype.forEach.call(dom.viewButtons, function (button) {
@@ -276,24 +303,27 @@
     state.activeFilterPanel = null;
   }
 
-  function setSortDirection(key, direction) {
+  // View and filter state
+  function setCollectionSortDirection(direction) {
     var normalized = direction === "desc" ? "desc" : "asc";
-    if (key !== "collection") {
+    if (state.sort.collection === normalized) {
       return;
     }
 
-    if (state.sort[key] === normalized) {
-      return;
-    }
-
-    state.sort[key] = normalized;
-    state.limits[key] = LIST_STEP;
+    state.sort.collection = normalized;
+    state.limits.collection = LIST_STEP;
     updateFilterControlUI();
-
-    renderCollectionTable((state.latestPayload && state.latestPayload.collection) || [], getCollectionAmountPerMember());
+    rerenderCollection();
   }
 
-  function setOutflowType(type) {
+  function toggleCollectionPaidOnlyFilter() {
+    state.filters.collectionPaidOnly = !state.filters.collectionPaidOnly;
+    state.limits.collection = LIST_STEP;
+    updateCollectionFilterUI();
+    rerenderCollection();
+  }
+
+  function setOutflowFilterType(type) {
     if (state.filters.outflowType === type) {
       return;
     }
@@ -364,7 +394,7 @@
     }
 
     state.pollingTimerId = window.setInterval(function () {
-      refreshData({ source: "polling" });
+      refreshData();
     }, POLLING_MS);
   }
 
@@ -384,12 +414,11 @@
     }
 
     startPolling();
-    refreshData({ source: "resume" });
+    refreshData();
   }
 
-  async function refreshData(options) {
-    var source = options && options.source ? options.source : "unknown";
-
+  // Data fetching and global rendering
+  async function refreshData() {
     if (state.isRefreshing) {
       return;
     }
@@ -400,7 +429,7 @@
     try {
       var payload = await fetchJsonWithTimeout(
         config.GAS_ENDPOINT,
-        normalizeNumber(config.REQUEST_TIMEOUT_MS, 12000)
+        getRequestTimeoutMs()
       );
 
       if (payload && payload.error) {
@@ -414,14 +443,14 @@
 
       state.latestPayload = payload;
       render(payload);
-      setSyncState("ok", source === "manual" ? "手動更新が完了しました。" : "");
+      clearSyncWarning();
     } catch (error) {
       if (state.latestPayload) {
         render(state.latestPayload);
-        setSyncState("warn", "最新データを確認できなかったため、前回更新分を表示しています。");
+        showSyncWarning(SYNC_WARNING_MESSAGES.staleData);
       } else {
         renderEmpty();
-        setSyncState("warn", "データを読み込めませんでした。時間をおいて再読み込みしてください。");
+        showSyncWarning(SYNC_WARNING_MESSAGES.loadFailed);
       }
       console.error(error);
     } finally {
@@ -430,22 +459,12 @@
     }
   }
 
-  function render(payload) {
-    var overview = calc.buildDashboardOverview ? calc.buildDashboardOverview(payload) : createDashboardOverviewFallback(payload);
-    state.summarySnapshot = overview;
-
-    renderUpdatedAt(payload.meta && payload.meta.generatedAt);
-    renderSummary(overview, false);
-    renderCollectionTable(payload.collection || [], overview.collectionAmountPerMember);
-    renderOutflowTable(getOutflowRows());
-
-    if (state.currentView === "summary") {
-      renderUsageChart(overview);
-    }
+  function buildOverview(payload) {
+    return calc.buildDashboardOverview ? calc.buildDashboardOverview(payload) : createDashboardOverviewFallback(payload);
   }
 
-  function renderEmpty() {
-    var payload = {
+  function createEmptyPayload() {
+    return {
       meta: {
         generatedAt: "",
         collectionAmountPerMember: 0,
@@ -464,18 +483,43 @@
         currentBalance: 0
       }
     };
+  }
 
-    var overview = calc.buildDashboardOverview ? calc.buildDashboardOverview(payload) : createDashboardOverviewFallback(payload);
+  function rerenderCollection() {
+    renderCollectionTable(getCollectionRows(), getCollectionAmountPerMember());
+  }
+
+  function rerenderOutflow() {
+    renderOutflowTable(getOutflowRows());
+  }
+
+  function render(payload) {
+    var overview = buildOverview(payload);
+    state.summarySnapshot = overview;
+
+    renderUpdatedAt(payload.meta && payload.meta.generatedAt);
+    renderSummary(overview);
+    rerenderCollection();
+    rerenderOutflow();
+
+    if (state.currentView === "summary") {
+      renderUsageChart(overview);
+    }
+  }
+
+  function renderEmpty() {
+    var overview = buildOverview(createEmptyPayload());
     state.summarySnapshot = overview;
 
     renderUpdatedAt("");
-    renderSummary(overview, true);
+    renderSummary(overview);
     renderCollectionTable([], 0);
     renderOutflowTable([]);
     renderUsageChart(null);
   }
 
-  function renderSummary(overview, isEmpty) {
+  // Summary rendering
+  function renderSummary(overview) {
     var summary = overview.summary;
 
     dom.summaryCollectionAmount.textContent = formatYen(summary.collectionTotal);
@@ -504,7 +548,6 @@
     dom.budgetBalanceAmount.textContent = formatYen(Math.max(overview.availableAfterExpenses, 0));
     dom.budgetUnpaidAmount.textContent = formatYen(overview.unpaidTargetAmount);
     dom.budgetUsageRate.textContent = formatPercent(overview.usageRate);
-
   }
 
   function updateAvailableSurface(balance) {
@@ -594,15 +637,11 @@
   }
 
   function toggleUsageChartPlaceholder(showPlaceholder) {
-    if (dom.usageChart) {
-      dom.usageChart.classList.toggle("hidden", showPlaceholder);
-    }
-
-    if (dom.usageChartEmpty) {
-      dom.usageChartEmpty.classList.toggle("hidden", !showPlaceholder);
-    }
+    toggleHidden(dom.usageChart, showPlaceholder);
+    toggleHidden(dom.usageChartEmpty, !showPlaceholder);
   }
 
+  // Collection and outflow rendering
   function renderCollectionTable(rows, amountPerMember) {
     var normalizedRows = getVisibleCollectionRows(rows);
     renderTableState({
@@ -611,16 +650,8 @@
       container: dom.collectionTable,
       button: dom.collectionMoreButton,
       count: dom.collectionCount,
-      emptyMessage: state.filters.collectionPaidOnly
-        ? "納入済みの収入データはまだありません。"
-        : "収入データはまだありません。",
-      renderContent: function (visibleRows) {
-        return (
-          '<div class="collection-ledger">' +
-          visibleRows.map(function (row) { return renderCollectionRow(row, amountPerMember); }).join("") +
-          "</div>"
-        );
-      }
+      emptyMessage: getCollectionEmptyMessage(),
+      renderContent: function (visibleRows) { return renderCollectionLedger(visibleRows, amountPerMember); }
     });
   }
 
@@ -632,27 +663,8 @@
       container: dom.outflowTable,
       button: dom.outflowMoreButton,
       count: dom.outflowCount,
-      emptyMessage: "表示できる支出データはまだありません。",
-      renderContent: function (visibleRows) {
-        return (
-          '<div class="table-wrapper">' +
-          '<div class="table-scroll"><table class="data-table">' +
-          "<thead><tr>" +
-          "<th>氏名</th>" +
-          "<th>種別</th>" +
-          "<th>項目</th>" +
-          '<th class="th-end">金額</th>' +
-          "<th>日付</th>" +
-          '<th class="th-end">返金状況</th>' +
-          "</tr></thead>" +
-          "<tbody>" +
-          visibleRows.map(renderOutflowDesktopRow).join("") +
-          "</tbody></table></div>" +
-          '<div class="data-card-list">' +
-          visibleRows.map(renderOutflowMobileCard).join("") +
-          "</div></div>"
-        );
-      }
+      emptyMessage: EMPTY_MESSAGES.outflow,
+      renderContent: renderOutflowContent
     });
   }
 
@@ -673,85 +685,138 @@
     updateMoreButton(params.button, limit, rows.length);
   }
 
+  function getCollectionEmptyMessage() {
+    return state.filters.collectionPaidOnly ? EMPTY_MESSAGES.collectionPaidOnly : EMPTY_MESSAGES.collection;
+  }
+
+  function renderCollectionLedger(rows, amountPerMember) {
+    return (
+      '<div class="collection-ledger">' +
+      rows.map(function (row) { return renderCollectionRow(row, amountPerMember); }).join("") +
+      "</div>"
+    );
+  }
+
+  function renderOutflowContent(rows) {
+    return (
+      '<div class="table-wrapper">' +
+      '<div class="table-scroll"><table class="data-table">' +
+      "<thead><tr>" +
+      "<th>氏名</th>" +
+      "<th>種別</th>" +
+      "<th>項目</th>" +
+      '<th class="th-end">金額</th>' +
+      "<th>日付</th>" +
+      '<th class="th-end">返金状況</th>' +
+      "</tr></thead>" +
+      "<tbody>" +
+      rows.map(renderOutflowDesktopRow).join("") +
+      "</tbody></table></div>" +
+      '<div class="data-card-list">' +
+      rows.map(renderOutflowMobileCard).join("") +
+      "</div></div>"
+    );
+  }
+
   function renderCollectionRow(row, amountPerMember) {
-    var nickname = normalizeText(row && row.nickname) || "名前未設定";
-    var confirmedDate = normalizeText(row && row.confirmedDate) || "--";
-    var isPaid = normalizeText(row && row.paymentStatus) === "済";
-    var statusClass = isPaid ? "status-pill status-pill-success" : "status-pill status-pill-warning";
-    var statusLabel = isPaid ? "納入済" : "未納";
-    var amountClass = isPaid ? "collection-row-amount" : "collection-row-amount collection-row-amount-pending";
-    var rowClass = isPaid ? "collection-row collection-row-paid" : "collection-row collection-row-unpaid";
+    var display = getCollectionDisplayState(row);
 
     return (
-      '<article class="' + rowClass + '">' +
+      '<article class="' + display.rowClass + '">' +
       '<div class="collection-row-main">' +
-      '<span class="collection-avatar" aria-hidden="true">' + escapeHtml(getNicknameInitial(nickname)) + "</span>" +
+      '<span class="collection-avatar" aria-hidden="true">' + escapeHtml(getNicknameInitial(display.nickname)) + "</span>" +
       '<div class="collection-row-copy">' +
-      '<p class="collection-row-name">' + escapeHtml(nickname) + "</p>" +
+      '<p class="collection-row-name">' + escapeHtml(display.nickname) + "</p>" +
       '<div class="collection-row-meta">' +
       '<span class="collection-row-meta-label">納入日</span>' +
-      '<span class="collection-row-meta-value">' + escapeHtml(confirmedDate) + "</span>" +
+      '<span class="collection-row-meta-value">' + escapeHtml(display.confirmedDate) + "</span>" +
       "</div>" +
       "</div>" +
       "</div>" +
       '<div class="collection-row-side">' +
       '<div class="collection-row-amount-wrap">' +
       '<span class="collection-row-amount-label">金額</span>' +
-      '<strong class="' + amountClass + '">' + formatYen(amountPerMember) + "</strong>" +
+      '<strong class="' + display.amountClass + '">' + formatYen(amountPerMember) + "</strong>" +
       "</div>" +
-      '<span class="' + statusClass + '">' + statusLabel + "</span>" +
+      '<span class="' + display.statusClass + '">' + display.statusLabel + "</span>" +
       "</div>" +
       "</article>"
     );
   }
 
   function renderOutflowDesktopRow(row) {
-    var nickname = normalizeText(row.nickname) || "--";
-    var statusMarkup = row.kind === "expense"
-      ? '<span class="data-table-muted">--</span>'
-      : '<span class="' + getStatusPillClass(row.statusTone) + '">' + escapeHtml(row.statusLabel) + "</span>";
-    var amountClass = row.kind === "reimbursement" && row.statusTone === "pending"
-      ? "data-table-amount data-table-amount-pending"
-      : "data-table-amount";
-    var rowClass = row.kind === "reimbursement" ? "data-table-row data-table-row-reimbursement" : "data-table-row data-table-row-expense";
+    var display = getOutflowDisplayState(row);
 
     return (
-      '<tr class="' + rowClass + '">' +
-      '<td class="' + (nickname === "--" ? "data-table-muted" : "data-table-name") + '">' + escapeHtml(nickname) + "</td>" +
-      "<td>" + createTypePill(row.kind) + "</td>" +
+      '<tr class="' + display.rowClass + '">' +
+      '<td class="' + (display.nickname === "--" ? "data-table-muted" : "data-table-name") + '">' + escapeHtml(display.nickname) + "</td>" +
+      "<td>" + display.typePill + "</td>" +
       "<td>" + escapeHtml(row.description) + "</td>" +
-      '<td class="text-right"><span class="' + amountClass + '">' + formatYen(row.amount) + "</span></td>" +
+      '<td class="text-right"><span class="' + display.amountClass + '">' + formatYen(row.amount) + "</span></td>" +
       "<td>" + escapeHtml(row.dateLabel) + "</td>" +
-      '<td class="text-right">' + statusMarkup + "</td>" +
+      '<td class="text-right">' + display.statusMarkup + "</td>" +
       "</tr>"
     );
   }
 
   function renderOutflowMobileCard(row) {
-    var nickname = normalizeText(row.nickname) || "--";
-    var statusLabel = row.kind === "expense" ? "--" : row.statusLabel;
-    var amountClass = row.kind === "reimbursement" && row.statusTone === "pending"
-      ? "data-card-field-value data-card-field-value-strong data-table-amount-pending"
-      : "data-card-field-value data-card-field-value-strong";
-    var cardClass = row.kind === "reimbursement"
-      ? "data-card-item data-card-item-reimbursement"
-      : "data-card-item data-card-item-expense";
+    var display = getOutflowDisplayState(row);
 
     return (
-      '<article class="' + cardClass + '">' +
+      '<article class="' + display.cardClass + '">' +
       '<div class="data-card-header">' +
       '<div>' +
       '<p class="data-card-title">' + escapeHtml(row.description) + "</p>" +
-      '<p class="mt-1 text-sm font-semibold text-[#8e97a8]">' + escapeHtml(nickname) + "</p>" +
+      '<p class="mt-1 text-sm font-semibold text-[#8e97a8]">' + escapeHtml(display.nickname) + "</p>" +
       "</div>" +
-      createTypePill(row.kind) +
+      display.typePill +
       "</div>" +
       '<div class="data-card-grid">' +
-      createMobileField("金額", formatYen(row.amount), amountClass) +
+      createMobileField("金額", formatYen(row.amount), display.cardAmountClass) +
       createMobileField("日付", escapeHtml(row.dateLabel), "data-card-field-value") +
-      createMobileField("返金状況", escapeHtml(statusLabel), "data-card-field-value") +
+      createMobileField("返金状況", escapeHtml(display.statusLabel), "data-card-field-value") +
       "</div></article>"
     );
+  }
+
+  function getCollectionDisplayState(row) {
+    var isPaid = normalizeText(row && row.paymentStatus) === "済";
+
+    return {
+      nickname: normalizeText(row && row.nickname) || "名前未設定",
+      confirmedDate: normalizeText(row && row.confirmedDate) || "--",
+      statusClass: isPaid ? STATUS_PILL_CLASSES.success : STATUS_PILL_CLASSES.warning,
+      statusLabel: isPaid ? "納入済" : "未納",
+      amountClass: isPaid ? "collection-row-amount" : "collection-row-amount collection-row-amount-pending",
+      rowClass: isPaid ? "collection-row collection-row-paid" : "collection-row collection-row-unpaid"
+    };
+  }
+
+  function getOutflowDisplayState(row) {
+    var isReimbursement = row.kind === "reimbursement";
+    var statusLabel = isReimbursement ? row.statusLabel : "--";
+    var statusTone = isReimbursement ? row.statusTone : "neutral";
+
+    return {
+      nickname: normalizeText(row.nickname) || "--",
+      typePill: createTypePill(row.kind),
+      statusLabel: statusLabel,
+      statusMarkup: isReimbursement
+        ? '<span class="' + getStatusPillClass(statusTone) + '">' + escapeHtml(statusLabel) + "</span>"
+        : '<span class="data-table-muted">--</span>',
+      amountClass: isReimbursement && statusTone === "pending"
+        ? "data-table-amount data-table-amount-pending"
+        : "data-table-amount",
+      cardAmountClass: isReimbursement && statusTone === "pending"
+        ? "data-card-field-value data-card-field-value-strong data-table-amount-pending"
+        : "data-card-field-value data-card-field-value-strong",
+      rowClass: isReimbursement
+        ? "data-table-row data-table-row-reimbursement"
+        : "data-table-row data-table-row-expense",
+      cardClass: isReimbursement
+        ? "data-card-item data-card-item-reimbursement"
+        : "data-card-item data-card-item-expense"
+    };
   }
 
   function createMobileField(label, value, valueClass) {
@@ -769,34 +834,12 @@
   }
 
   function createTypePill(kind) {
-    var typeClass = "type-pill type-pill-income";
-    var label = "収入";
-
-    if (kind === "expense") {
-      typeClass = "type-pill type-pill-expense";
-      label = "経費";
-    } else if (kind === "reimbursement") {
-      typeClass = "type-pill type-pill-refund";
-      label = "立替";
-    }
-
-    return '<span class="' + typeClass + '">' + label + "</span>";
+    var pill = TYPE_PILLS[kind] || TYPE_PILLS.income;
+    return '<span class="' + pill.className + '">' + pill.label + "</span>";
   }
 
   function getStatusPillClass(tone) {
-    if (tone === "success") {
-      return "status-pill status-pill-success";
-    }
-
-    if (tone === "pending") {
-      return "status-pill status-pill-pending";
-    }
-
-    if (tone === "warning") {
-      return "status-pill status-pill-warning";
-    }
-
-    return "status-pill status-pill-neutral";
+    return STATUS_PILL_CLASSES[tone] || STATUS_PILL_CLASSES.neutral;
   }
 
   function getVisibleCollectionRows(rows) {
@@ -829,11 +872,16 @@
     return normalizedRows;
   }
 
+  // Shared DOM and state helpers
   function sortByNickname(rows, direction) {
     if (calc.sortByNickname) {
       return calc.sortByNickname(rows, direction);
     }
     return rows.slice();
+  }
+
+  function getCollectionRows() {
+    return (state.latestPayload && state.latestPayload.collection) || [];
   }
 
   function getCollectionAmountPerMember() {
@@ -860,6 +908,7 @@
 
     state.limits[key] = LIST_STEP;
   }
+
   function updateMoreButton(button, visibleLimit, totalRows) {
     if (!button) {
       return;
@@ -879,25 +928,24 @@
       dom.refreshButton.disabled = isLoading;
       dom.refreshButton.dataset.loading = isLoading ? "true" : "false";
       dom.refreshButton.setAttribute("aria-busy", isLoading ? "true" : "false");
-      dom.refreshButton.classList.toggle("hidden", isLoading);
+      toggleHidden(dom.refreshButton, isLoading);
     }
 
     if (dom.refreshLoading) {
-      dom.refreshLoading.classList.toggle("hidden", !isLoading);
+      toggleHidden(dom.refreshLoading, !isLoading);
     }
   }
 
-  function setSyncState(type, message) {
-    if (type === "ok") {
-      if (dom.syncBanner) {
-        dom.syncBanner.classList.add("hidden");
-        dom.syncBanner.textContent = "";
-      }
-      return;
-    }
-
+  function clearSyncWarning() {
     if (dom.syncBanner) {
-      dom.syncBanner.classList.remove("hidden");
+      toggleHidden(dom.syncBanner, true);
+      dom.syncBanner.textContent = "";
+    }
+  }
+
+  function showSyncWarning(message) {
+    if (dom.syncBanner) {
+      toggleHidden(dom.syncBanner, false);
       dom.syncBanner.textContent = message;
     }
   }
@@ -913,6 +961,19 @@
     if (dom.updatedAtSidebar) {
       dom.updatedAtSidebar.textContent = desktopLabel;
     }
+  }
+
+  function toggleHidden(element, isHidden) {
+    if (!element) {
+      return;
+    }
+
+    element.classList.toggle("hidden", isHidden);
+  }
+
+  // Network and formatting helpers
+  function getRequestTimeoutMs() {
+    return normalizeNumber(config.REQUEST_TIMEOUT_MS, 12000);
   }
 
   function readChartPalette() {
