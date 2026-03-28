@@ -264,9 +264,9 @@ test("buildDashboardOverview derives target and progress values from public payl
       { nickname: "C", paymentStatus: "未" }
     ],
     expenses: [
-      { category: "備品", amount: 3200 },
-      { category: "飲食", amount: 1800 },
-      { category: "飲食", amount: 1200 }
+      { amount: 3200 },
+      { amount: 1800 },
+      { amount: 1200 }
     ],
     reimbursements: [
       { reimbursementAmount: 700, refundStatus: "未返金" },
@@ -298,7 +298,7 @@ test("buildDashboardOverview derives target and progress values from public payl
 test("createOutflowRows normalizes expenses and reimbursements without exposing private fields", () => {
   const rows = createOutflowRows({
     expenses: [
-      { id: 10, date: "2026-04-01", category: "備品", description: "名札", amount: 3200, payer: "内部" }
+      { id: 10, date: "2026-04-01", description: "名札", amount: 3200, payer: "内部" }
     ],
     reimbursements: [
       { id: 20, nickname: "あおい", description: "ランチ会", reimbursementAmount: 1400, refundStatus: "未返金", approvalStatus: "承認済" }
@@ -321,7 +321,7 @@ test("createOutflowRows normalizes expenses and reimbursements without exposing 
     id: 20,
     kind: "reimbursement",
     nickname: "あおい",
-    typeLabel: "返金予定",
+    typeLabel: "立替",
     description: "ランチ会",
     amount: 1400,
     dateLabel: "--",

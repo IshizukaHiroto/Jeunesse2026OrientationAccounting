@@ -131,8 +131,7 @@ function readExpenses_(sheet) {
         id: index + 2,
         date: normalizeDate_(row["日付"]),
         description: text_(row["内容"]),
-        amount: toYen_(row["金額"]),
-        category: text_(row["カテゴリ"])
+        amount: toYen_(row["金額"])
       };
     })
     .filter(function (row) {
@@ -198,7 +197,6 @@ function toPublicExpenseRow_(row) {
   return {
     id: row.id,
     date: row.date,
-    category: row.category,
     description: row.description,
     amount: row.amount
   };

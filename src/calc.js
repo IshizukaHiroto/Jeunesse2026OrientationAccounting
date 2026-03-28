@@ -423,13 +423,13 @@
     var spentInTarget = targetCollection > 0 ? Math.min(expensesTotal, targetCollection) : 0;
     var remainingTargetAmount = targetCollection > 0 ? Math.max(targetCollection - spentInTarget - unpaidTargetAmount, 0) : 0;
 
-    var expenseCategoryCount = expenses
-      .map(function (row) {
-        return normalize(row && row.category);
-      })
-      .filter(function (value, index, rows) {
-        return value.length > 0 && rows.indexOf(value) === index;
-      }).length;
+    var expenseCategoryCount = 0;
+    if (expenses.length > 0) {
+      expenseCategoryCount += 1;
+    }
+    if (reimbursements.length > 0) {
+      expenseCategoryCount += 1;
+    }
 
     var pendingRefundRows = reimbursements.filter(function (row) {
       return normalize(row && row.refundStatus) !== "返金済";
@@ -481,7 +481,7 @@
         id: row && row.id !== undefined ? row.id : "reimbursement-" + String(index),
         kind: "reimbursement",
         nickname: normalize(row && row.nickname) || "--",
-        typeLabel: "返金予定",
+        typeLabel: "立替",
         description: normalize(row && row.description) || "内容未入力",
         amount: Math.max(0, pickReimbursementAmount(row)),
         dateLabel: "--",
@@ -505,7 +505,7 @@
       "seasonEnd"
     ];
     var allowedCollectionKeys = ["nickname", "paymentStatus", "confirmedDate"];
-    var allowedExpenseKeys = ["id", "date", "category", "description", "amount"];
+    var allowedExpenseKeys = ["id", "date", "description", "amount"];
     var allowedReimbursementKeys = [
       "id",
       "nickname",

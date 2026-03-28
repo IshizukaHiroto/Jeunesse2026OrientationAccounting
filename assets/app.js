@@ -557,7 +557,7 @@
     setProgress(dom.summaryCollectionBar, overview.collectionRate);
 
     dom.summaryExpensesAmount.textContent = formatYen(summary.expensesTotal);
-    dom.summaryExpensesMeta.textContent = String(overview.expenseCategoryCount) + "項目の支出カテゴリ";
+    dom.summaryExpensesMeta.textContent = String(overview.expenseCategoryCount) + "区分の支出内訳";
 
     dom.summaryRefundsAmount.textContent = formatYen(summary.plannedReimbursementsTotal);
     dom.summaryRefundsMeta.textContent = String(overview.pendingRefundCount) + "件の未返金立替";
@@ -939,7 +939,7 @@
       '<span class="' + getStatusPillClass(normalized.statusTone) + '">' + escapeHtml(normalized.refundStatus) + "</span>" +
       "</div>" +
       '<div class="data-card-grid">' +
-      createMobileField("種別", "返金予定", "data-card-field-value") +
+      createMobileField("種別", "立替", "data-card-field-value") +
       createMobileField("返金額", formatYen(normalized.reimbursementAmount), amountClass) +
       "</div></article>"
     );
@@ -963,7 +963,7 @@
       label = "経費";
     } else if (kind === "reimbursement") {
       typeClass = "type-pill type-pill-refund";
-      label = "返金予定";
+      label = "立替";
     }
 
     return '<span class="' + typeClass + '">' + label + "</span>";

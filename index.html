@@ -186,7 +186,7 @@
               </div>
               <p class="summary-card-label">総支出額</p>
               <p id="summary-expenses-amount" class="summary-card-value">¥0</p>
-              <p id="summary-expenses-meta" class="summary-card-meta">0項目の支出カテゴリ</p>
+              <p id="summary-expenses-meta" class="summary-card-meta">0区分の支出内訳</p>
             </article>
 
             <article class="summary-card summary-card-orange">
@@ -389,8 +389,8 @@
           <div class="view-header">
             <div>
               <h2 class="view-title">支出</h2>
-              <p class="view-copy">経費と返金予定を、公開JSONの範囲でまとめて確認できます。</p>
-              <p class="view-note">返金予定の上限は新入生1人あたり <span id="refund-cap-note">700円</span> です。</p>
+              <p class="view-copy">経費記録と立替返金管理を、公開JSONの範囲でまとめて確認できます。</p>
+              <p class="view-note">立替の返金上限は新入生1人あたり <span id="refund-cap-note">700円</span> です。</p>
             </div>
             <div class="filter-shell">
               <button
@@ -413,7 +413,7 @@
                   <div class="filter-chip-row" role="group" aria-label="支出の種別">
                     <button id="outflow-filter-all" type="button" class="filter-chip" aria-pressed="true">すべて</button>
                     <button id="outflow-filter-expense" type="button" class="filter-chip" aria-pressed="false">経費</button>
-                    <button id="outflow-filter-reimbursement" type="button" class="filter-chip" aria-pressed="false">返金予定</button>
+                    <button id="outflow-filter-reimbursement" type="button" class="filter-chip" aria-pressed="false">立替</button>
                   </div>
                 </div>
               </div>
@@ -441,7 +441,7 @@
           <div class="view-header">
             <div>
               <h2 class="view-title">返金状況</h2>
-              <p class="view-copy">返金対象の一覧を、返金予定額とステータス中心で確認できます。</p>
+              <p class="view-copy">立替申請の一覧を、返金額とステータス中心で確認できます。</p>
             </div>
             <div class="filter-shell">
               <button
