@@ -527,11 +527,11 @@
     dom.summaryCollectionRate.textContent = formatPercent(overview.collectionRate);
     setProgress(dom.summaryCollectionBar, overview.collectionRate);
 
-    dom.summaryExpensesAmount.textContent = formatYen(overview.outflowTotal);
-    dom.summaryExpensesMeta.textContent = "内訳 " + String(overview.outflowTypeCount) + "種類";
+    dom.summaryExpensesAmount.textContent = formatYen(summary.expensesTotal);
+    dom.summaryExpensesMeta.textContent = "経費 " + String(overview.expenseCount) + "件";
 
-    dom.summaryRefundsAmount.textContent = formatYen(overview.pendingRefundTotal);
-    dom.summaryRefundsMeta.textContent = "未返金 " + String(overview.pendingRefundCount) + "件";
+    dom.summaryRefundsAmount.textContent = formatYen(summary.plannedReimbursementsTotal);
+    dom.summaryRefundsMeta.textContent = "承認済み立替 " + String(overview.reimbursementCount) + "件";
 
     dom.summaryPaymentMain.textContent =
       String(summary.paidMembers) + " / " + String(overview.totalMembers) + "名";
@@ -544,7 +544,7 @@
     dom.summaryAvailableBalance.textContent = formatYen(overview.currentBalance);
     updateAvailableSurface(overview.currentBalance);
 
-    dom.budgetExpensesAmount.textContent = formatYen(overview.spentInTarget);
+    dom.budgetExpensesAmount.textContent = formatYen(overview.outflowTotal);
     dom.budgetBalanceAmount.textContent = formatYen(overview.remainingTargetAmount);
     dom.budgetUnpaidAmount.textContent = formatYen(overview.unpaidTargetAmount);
     dom.budgetUsageRate.textContent = formatPercent(overview.usageRate);
@@ -605,7 +605,7 @@
     state.usageChart = new Chart(dom.usageChart, {
       type: "doughnut",
       data: {
-        labels: ["支出額", "残高", "未納分"],
+        labels: ["総支出額", "残高", "未納分"],
         datasets: [
           {
             data: values,
@@ -1033,6 +1033,8 @@
     var data = payload && typeof payload === "object" ? payload : {};
     var summary = data.summary || calc.computeSummary(data);
     var totalMembers = Array.isArray(data.collection) ? data.collection.length : Math.max(0, summary.paidMembers + summary.unpaidMembers);
+    var expenses = Array.isArray(data.expenses) ? data.expenses : [];
+    var reimbursements = Array.isArray(data.reimbursements) ? data.reimbursements : [];
     var collectionAmountPerMember = summary.collectionAmountPerMember || 0;
     var targetCollection = totalMembers * collectionAmountPerMember;
     var collectedInTarget = Math.min(summary.collectionTotal, targetCollection);
@@ -1066,9 +1068,9 @@
       outflowTotal: outflowTotal,
       availableAfterExpenses: summary.availableAfterExpenses,
       currentBalance: normalizeNumber(summary.currentBalance, summary.collectionTotal - outflowTotal),
-      outflowTypeCount: outflowTypeCount,
-      pendingRefundCount: 0,
-      pendingRefundTotal: 0
+      reimbursementCount: reimbursements.length,
+      expenseCount: expenses.length,
+      outflowTypeCount: outflowTypeCount
     };
   }
 

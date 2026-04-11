@@ -293,9 +293,9 @@ test("buildDashboardOverview derives target and progress values from public payl
   assert.equal(overview.outflowTotal, 7400);
   assert.equal(overview.currentBalance, 600);
   assert.ok(Math.abs(overview.usageRate - 7400 / 120) < 1e-9);
+  assert.equal(overview.expenseCount, 3);
+  assert.equal(overview.reimbursementCount, 2);
   assert.equal(overview.outflowTypeCount, 2);
-  assert.equal(overview.pendingRefundCount, 1);
-  assert.equal(overview.pendingRefundTotal, 700);
 });
 
 test("buildDashboardOverview caps spent amount by collected target when collection lags behind expenses", () => {

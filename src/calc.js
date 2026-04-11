@@ -438,10 +438,6 @@
       outflowTypeCount += 1;
     }
 
-    var pendingRefundRows = reimbursements.filter(function (row) {
-      return normalize(row && row.refundStatus) !== "返金済";
-    });
-
     return {
       summary: summary,
       collectionAmountPerMember: collectionAmountPerMember,
@@ -457,11 +453,9 @@
       availableAfterExpenses: availableAfterExpenses,
       currentBalance: currentBalance,
       plannedReimbursementsTotal: plannedReimbursementsTotal,
-      outflowTypeCount: outflowTypeCount,
-      pendingRefundCount: pendingRefundRows.length,
-      pendingRefundTotal: sumBy(pendingRefundRows, function (row) {
-        return pickReimbursementAmount(row);
-      })
+      reimbursementCount: reimbursements.length,
+      expenseCount: expenses.length,
+      outflowTypeCount: outflowTypeCount
     };
   }
 
